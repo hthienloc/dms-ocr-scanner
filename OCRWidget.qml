@@ -163,9 +163,17 @@ PluginComponent {
                 detailsText: pluginRoot.isScanning ? "Processing..." : "Ready to scan"
                 showCloseButton: true
 
-                Column {
+                DankFlickable {
                     width: parent.width
-                    spacing: Theme.spacingM
+                    height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM)
+                    contentHeight: contentColumn.implicitHeight
+                    contentWidth: width
+                    clip: true
+
+                    Column {
+                        id: contentColumn
+                        width: parent.width
+                        spacing: Theme.spacingM
 
                     // Input Selection Cards
                     Row {
@@ -258,7 +266,7 @@ PluginComponent {
                         border.color: pluginRoot.isScanning ? Theme.primary : Theme.outlineVariant
                         border.width: 1
 
-                        Flickable {
+                        DankFlickable {
                             anchors.fill: parent
                             anchors.margins: Theme.spacingM
                             contentWidth: width - (Theme.spacingM * 2)
@@ -346,6 +354,7 @@ PluginComponent {
                     }
                 }
             }
+        }
 
             // Global Scanning Overlay
             Rectangle {
