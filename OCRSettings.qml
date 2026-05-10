@@ -135,6 +135,11 @@ PluginSettings {
                     label: "Keep results when closed"
                     defaultValue: true
                 }
+                ToggleSetting {
+                    settingKey: "showPopoutOnRightClick"
+                    label: "Show popout on right-click"
+                    defaultValue: true
+                }
             }
         }
     }

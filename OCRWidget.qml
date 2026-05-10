@@ -15,8 +15,9 @@ PluginComponent {
 
     // Right-click action on pill
     pillRightClickAction: () => {
+        const showPopout = pluginData.showPopoutOnRightClick ?? true;
+        if (showPopout) pluginRoot.triggerPopout();
         pluginRoot.scanFromClipboard();
-        pluginRoot.triggerPopout();
     }
 
     property string resultText: ""
@@ -24,7 +25,6 @@ PluginComponent {
 
     function scanFromClipboard() {
         if (isScanning) return;
-        isScanning = true;
         
         const tempImage = "/tmp/dms_ocr_input.png";
         const getClipCmd = "wl-paste -t image/png > " + tempImage + " || xclip -selection clipboard -t image/png -o > " + tempImage;
@@ -34,9 +34,9 @@ PluginComponent {
             ["sh", "-c", getClipCmd],
             (stdout, exitCode) => {
                 if (exitCode === 0) {
+                    isScanning = true;
                     runTesseract(tempImage);
                 } else {
-                    isScanning = false;
                     ToastService.showError("No image found in clipboard!");
                 }
             },
@@ -97,29 +97,25 @@ PluginComponent {
             (stdout, exitCode) => {
                 if (exitCode === 0) {
                     ToastService.showInfo("Copied to clipboard!");
-                }},
+                }
+            },
             0
         );
     }
 
     function saveResultToFile() {
-        if (resultText === "") return;
-        
+        if (!resultText) return;
         Proc.runCommand(
-            "save-file-dialog",
-            ["kdialog", "--getsavefilename", ":", "Text Files (*.txt)"],
+            "save-file",
+            ["kdialog", "--getsavefilename", ":", "*.txt"],
             (stdout, exitCode) => {
                 const filePath = stdout.trim();
                 if (exitCode === 0 && filePath !== "") {
-                    let finalPath = filePath;
-                    if (!finalPath.toLowerCase().endsWith(".txt")) finalPath += ".txt";
-                    
                     Proc.runCommand(
                         "write-file",
-                        ["sh", "-c", "echo -n \"" + resultText.replace(/"/g, "\\\"") + "\" > \"" + finalPath + "\""],
-                        (out, code) => {
-                            if (code === 0) ToastService.showInfo("Saved to " + finalPath);
-                            else ToastService.showError("Failed to save file.");
+                        ["sh", "-c", "echo \"" + resultText.replace(/"/g, "\\\"") + "\" > '" + filePath + "'"],
+                        (stdout, exitCode) => {
+                            if (exitCode === 0) ToastService.showInfo("Saved successfully!");
                         },
                         0
                     );
@@ -131,22 +127,17 @@ PluginComponent {
 
     horizontalBarPill: Component {
         Item {
-            implicitWidth: pillRow.implicitWidth
-            implicitHeight: pillRow.implicitHeight
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: pluginRoot.triggerPopout()
-            }
+            implicitWidth: pillRow.implicitWidth + Theme.spacingM
+            implicitHeight: 32
 
             Row {
                 id: pillRow
                 anchors.centerIn: parent
-                spacing: 4
+                spacing: Theme.spacingXS
+                
                 DankIcon {
                     name: "document_scanner"
-                    size: Theme.iconSize
+                    size: Theme.iconSizeSmall
                     color: pluginRoot.isScanning ? Theme.primary : Theme.surfaceVariantText
                 }
                 StyledText {
@@ -161,239 +152,239 @@ PluginComponent {
     verticalBarPill: horizontalBarPill
 
     popoutContent: Component {
-        PopoutComponent {
-            id: popout
-            width: pluginRoot.popoutWidth
-            headerText: "OCR Scanner"
-            detailsText: pluginRoot.isScanning ? "Processing..." : "Ready to scan"
-            showCloseButton: true
+        Item {
+            implicitWidth: pluginRoot.popoutWidth
+            implicitHeight: popout.implicitHeight
 
-            onVisibleChanged: {
-                if (!visible && !(pluginData.keepResults ?? true)) {
-                    pluginRoot.resultText = "";
-                }
-            }
-
-            Column {
+            PopoutComponent {
+                id: popout
                 width: parent.width
-                spacing: Theme.spacingM
+                headerText: "OCR Scanner"
+                detailsText: pluginRoot.isScanning ? "Processing..." : "Ready to scan"
+                showCloseButton: true
 
-                // Input Selection Cards
-                Row {
+                Column {
                     width: parent.width
                     spacing: Theme.spacingM
 
-                    // Clipboard Card
-                    StyledRect {
-                        id: clipCard
-                        width: (parent.width - Theme.spacingM) / 2
-                        height: 100
-                        radius: Theme.cornerRadius
-                        color: clipMouse.containsMouse ? Theme.primaryContainer : Theme.surfaceContainerHigh
-                        border.color: Theme.primary
-                        border.width: clipMouse.containsMouse ? 2 : 0
-                        
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: Theme.spacingS
-                            DankIcon {
-                                name: "content_paste"
-                                size: 32
-                                color: clipMouse.containsMouse ? Theme.primary : Theme.surfaceVariantText
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-                            StyledText {
-                                text: "Clipboard"
-                                font.pixelSize: Theme.fontSizeMedium
-                                font.weight: Font.Bold
-                                color: clipMouse.containsMouse ? Theme.primary : Theme.surfaceVariantText
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-                        }
-
-                        MouseArea {
-                            id: clipMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            enabled: !pluginRoot.isScanning
-                            onClicked: pluginRoot.scanFromClipboard()
-                        }
-                    }
-
-                    // File Card
-                    StyledRect {
-                        id: fileCard
-                        width: (parent.width - Theme.spacingM) / 2
-                        height: 100
-                        radius: Theme.cornerRadius
-                        color: fileMouse.containsMouse ? Theme.secondaryContainer : Theme.surfaceContainerHigh
-                        border.color: Theme.secondary
-                        border.width: fileMouse.containsMouse ? 2 : 0
-
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: Theme.spacingS
-                            DankIcon {
-                                name: "image"
-                                size: 32
-                                color: fileMouse.containsMouse ? Theme.secondary : Theme.surfaceVariantText
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-                            StyledText {
-                                text: "Select File"
-                                font.pixelSize: Theme.fontSizeMedium
-                                font.weight: Font.Bold
-                                color: fileMouse.containsMouse ? Theme.secondary : Theme.surfaceVariantText
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-                        }
-
-                        MouseArea {
-                            id: fileMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            enabled: !pluginRoot.isScanning
-                            onClicked: pluginRoot.selectFileAndScan()
-                        }
-                    }
-                }
-
-                // Result Area with integrated actions
-                StyledRect {
-                    width: parent.width
-                    height: 280
-                    radius: Theme.cornerRadius
-                    color: Theme.surfaceContainerLow
-                    border.color: pluginRoot.isScanning ? Theme.primary : Theme.outlineVariant
-                    border.width: 1
-
-                    Flickable {
-                        anchors.fill: parent
-                        anchors.margins: Theme.spacingM
-                        contentWidth: width - (Theme.spacingM * 2)
-                        contentHeight: resultArea.implicitHeight
-                        clip: true
-
-                        TextEdit {
-                            id: resultArea
-                            width: parent.width
-                            text: pluginRoot.resultText
-                            wrapMode: TextEdit.Wrap
-                            font.pixelSize: Theme.fontSizeMedium
-                            color: Theme.surfaceText
-                            selectByMouse: true
-                            onTextChanged: pluginRoot.resultText = text
-                            
-                            Text {
-                                text: "Extracted text will appear here..."
-                                color: Theme.outlineVariant
-                                visible: resultArea.text === ""
-                                font: resultArea.font
-                            }
-                        }
-                    }
-
-                    // Floating Action Row
+                    // Input Selection Cards
                     Row {
-                        anchors.top: parent.top
-                        anchors.right: parent.right
-                        anchors.margins: Theme.spacingS
-                        spacing: Theme.spacingXS
-                        visible: pluginRoot.resultText !== ""
+                        width: parent.width
+                        spacing: Theme.spacingM
 
-                        // Copy Button
+                        // Clipboard Card
                         StyledRect {
-                            width: 36
-                            height: 36
-                            radius: 18
-                            color: copyMouse.containsMouse ? Theme.primaryContainer : Theme.surfaceContainerHighest
+                            id: clipCard
+                            width: (parent.width - Theme.spacingM) / 2
+                            height: 100
+                            radius: Theme.cornerRadius
+                            color: clipMouse.containsMouse ? Theme.primaryContainer : Theme.surfaceContainerHigh
+                            border.color: Theme.primary
+                            border.width: clipMouse.containsMouse ? 2 : 0
                             
-                            DankIcon {
-                                name: "content_copy"
-                                size: Theme.iconSizeSmall
-                                color: copyMouse.containsMouse ? Theme.primary : Theme.surfaceVariantText
+                            Column {
                                 anchors.centerIn: parent
+                                spacing: Theme.spacingS
+                                DankIcon {
+                                    name: "content_paste"
+                                    size: 32
+                                    color: Theme.primary
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                                StyledText {
+                                    text: "Clipboard"
+                                    font.pixelSize: Theme.fontSizeMedium
+                                    font.weight: Font.Bold
+                                    color: clipMouse.containsMouse ? Theme.onPrimaryContainer : Theme.surfaceText
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
                             }
 
                             MouseArea {
-                                id: copyMouse
+                                id: clipMouse
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: pluginRoot.copyToClipboard(pluginRoot.resultText)
+                                enabled: !pluginRoot.isScanning
+                                onClicked: pluginRoot.scanFromClipboard()
+                            }
+                        }
+
+                        // File Card
+                        StyledRect {
+                            id: fileCard
+                            width: (parent.width - Theme.spacingM) / 2
+                            height: 100
+                            radius: Theme.cornerRadius
+                            color: fileMouse.containsMouse ? Theme.secondaryContainer : Theme.surfaceContainerHigh
+                            border.color: Theme.secondary
+                            border.width: fileMouse.containsMouse ? 2 : 0
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: Theme.spacingS
+                                DankIcon {
+                                    name: "image"
+                                    size: 32
+                                    color: Theme.secondary
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                                StyledText {
+                                    text: "Select File"
+                                    font.pixelSize: Theme.fontSizeMedium
+                                    font.weight: Font.Bold
+                                    color: fileMouse.containsMouse ? Theme.onSecondaryContainer : Theme.surfaceText
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                            }
+
+                            MouseArea {
+                                id: fileMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                enabled: !pluginRoot.isScanning
+                                onClicked: pluginRoot.selectFileAndScan()
                             }
                         }
                     }
 
-                    // Scanning Overlay
-                    Rectangle {
-                        anchors.fill: parent
-                        visible: pluginRoot.isScanning
-                        color: Theme.withAlpha(Theme.surfaceContainerLow, 0.8)
-                        radius: parent.radius
+                    // Result Area with integrated actions
+                    StyledRect {
+                        width: parent.width
+                        height: 280
+                        radius: Theme.cornerRadius
+                        color: Theme.surfaceContainer
+                        border.color: pluginRoot.isScanning ? Theme.primary : Theme.outlineVariant
+                        border.width: 1
 
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: Theme.spacingM
-                            BusyIndicator {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                running: pluginRoot.isScanning
+                        Flickable {
+                            anchors.fill: parent
+                            anchors.margins: Theme.spacingM
+                            contentWidth: width - (Theme.spacingM * 2)
+                            contentHeight: resultArea.implicitHeight
+                            clip: true
+
+                            TextEdit {
+                                id: resultArea
+                                width: parent.width
+                                text: pluginRoot.resultText
+                                wrapMode: TextEdit.Wrap
+                                font.pixelSize: Theme.fontSizeMedium
+                                color: Theme.surfaceText
+                                selectByMouse: true
+                                onTextChanged: pluginRoot.resultText = text
+                                
+                                Text {
+                                    text: "Extracted text will appear here..."
+                                    color: Theme.outlineVariant
+                                    visible: resultArea.text === ""
+                                    font: resultArea.font
+                                }
                             }
-                            StyledText {
-                                text: "Analyzing Image..."
-                                color: Theme.primary
-                                font.weight: Font.Medium
-                                anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        // Floating Action Row
+                        Row {
+                            anchors.top: parent.top
+                            anchors.right: parent.right
+                            anchors.margins: Theme.spacingS
+                            spacing: Theme.spacingXS
+                            visible: pluginRoot.resultText !== ""
+
+                            // Copy Button
+                            StyledRect {
+                                width: 36
+                                height: 36
+                                radius: 18
+                                color: copyMouse.containsMouse ? Theme.primaryContainer : Theme.surfaceContainerHighest
+                                
+                                DankIcon {
+                                    name: "content_copy"
+                                    size: Theme.iconSizeSmall
+                                    color: copyMouse.containsMouse ? Theme.primary : Theme.surfaceVariantText
+                                    anchors.centerIn: parent
+                                }
+
+                                MouseArea {
+                                    id: copyMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: pluginRoot.copyToClipboard(pluginRoot.resultText)
+                                }
+                            }
+                        }
+                    }
+
+                    // Action Bar
+                    Row {
+                        width: parent.width
+                        spacing: Theme.spacingM
+
+                        DankButton {
+                            text: "Save to File"
+                            width: (parent.width - Theme.spacingM) / 2
+                            iconName: "save"
+                            backgroundColor: Theme.secondaryContainer
+                            textColor: Theme.secondary
+                            enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
+                            onClicked: pluginRoot.saveResultToFile()
+                        }
+
+                        DankButton {
+                            text: "Clear Results"
+                            width: (parent.width - Theme.spacingM) / 2
+                            iconName: "delete_sweep"
+                            backgroundColor: Theme.errorContainer
+                            textColor: Theme.error
+                            enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
+                            onClicked: {
+                                pluginRoot.resultText = "";
                             }
                         }
                     }
                 }
+            }
 
-                // Action Bar
-                Row {
-                    width: parent.width
-                    spacing: Theme.spacingM
+            // Global Scanning Overlay
+            Rectangle {
+                anchors.fill: parent
+                z: 100
+                visible: opacity > 0
+                opacity: pluginRoot.isScanning ? 1 : 0
+                color: Theme.withAlpha(Theme.surfaceContainer, 0.9)
+                radius: Theme.cornerRadius
 
-                    DankButton {
-                        text: "Save to File"
-                        width: (parent.width - Theme.spacingM) / 2
-                        iconName: "save"
-                        backgroundColor: Theme.secondaryContainer
-                        textColor: Theme.secondary
-                        enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
-                        onClicked: pluginRoot.saveResultToFile()
-                    }
-
-                    DankButton {
-                        text: "Clear Results"
-                        width: (parent.width - Theme.spacingM) / 2
-                        iconName: "delete_sweep"
-                        backgroundColor: pluginRoot.resultText !== "" ? Theme.errorContainer : Theme.surfaceVariant
-                        textColor: pluginRoot.resultText !== "" ? Theme.error : Theme.surfaceVariantText
-                        enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
-                        onClicked: {
-                            pluginRoot.resultText = "";
-                        }
-                    }
+                Behavior on opacity {
+                    NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing }
                 }
 
-                // Quick Tip
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: Theme.spacingXS
-                    opacity: 0.7
+                Column {
+                    anchors.centerIn: parent
+                    spacing: Theme.spacingL
                     
-                    DankIcon {
-                        name: "info"
-                        size: 14
-                        color: Theme.surfaceVariantText
+                    BusyIndicator {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        running: pluginRoot.isScanning
+                        implicitWidth: 64
+                        implicitHeight: 64
                     }
+                    
                     StyledText {
-                        text: "Right-click the bar icon for instant scan"
-                        font.pixelSize: Theme.fontSizeSmall
+                        text: "Analyzing Image..."
+                        color: Theme.primary
+                        font.pixelSize: Theme.fontSizeLarge
+                        font.weight: Font.Medium
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+                    
+                    StyledText {
+                        text: "Please wait a moment"
                         color: Theme.surfaceVariantText
+                        font.pixelSize: Theme.fontSizeMedium
+                        opacity: 0.8
+                        anchors.horizontalCenter: parent.horizontalCenter
                     }
                 }
             }
