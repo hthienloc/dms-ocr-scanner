@@ -184,160 +184,148 @@ PluginComponent {
                         width: parent.width
                         spacing: Theme.spacingM
 
-                        // Header Row: Selection Buttons (Compact)
+                        // Side-by-Side Area
                         Row {
                             width: parent.width
                             spacing: Theme.spacingM
                             
-                            DankButton {
-                                text: "Scan Clipboard"
+                            // Left Column: Image + Image Actions
+                            Column {
                                 width: (parent.width - Theme.spacingM) / 2
-                                iconName: "content_paste"
-                                onClicked: pluginRoot.scanFromClipboard()
-                                enabled: !pluginRoot.isScanning
-                                backgroundColor: Theme.primaryContainer
-                                textColor: Theme.primary
-                            }
-                            
-                            DankButton {
-                                text: "Select Image File"
-                                width: (parent.width - Theme.spacingM) / 2
-                                iconName: "image"
-                                onClicked: pluginRoot.selectFileAndScan()
-                                enabled: !pluginRoot.isScanning
-                                backgroundColor: Theme.secondaryContainer
-                                textColor: Theme.secondary
-                            }
-                        }
-
-                        // Comparison Area (Side-by-Side)
-                        Row {
-                            width: parent.width
-                            height: 380
-                            spacing: Theme.spacingM
-                            
-                            // Left: Image Panel (Reference)
-                            StyledRect {
-                                width: (parent.width - Theme.spacingM) / 2
-                                height: parent.height
-                                radius: Theme.cornerRadius
-                                color: Theme.surfaceContainer
-                                border.color: Theme.outlineVariant
-                                border.width: 1
-                                clip: true
+                                spacing: Theme.spacingM
                                 
-                                Image {
-                                    id: sourceImg
-                                    anchors.fill: parent
-                                    anchors.margins: Theme.spacingM
-                                    fillMode: Image.PreserveAspectFit
-                                    asynchronous: true
-                                    source: pluginRoot.sourceImage ? "file://" + pluginRoot.sourceImage + "?t=" + pluginRoot.imageTrigger : ""
-                                    
-                                    StyledText {
-                                        anchors.centerIn: parent
-                                        text: "No image scanned yet"
-                                        color: Theme.outlineVariant
-                                        visible: sourceImg.status !== Image.Ready && !pluginRoot.isScanning
-                                        font.pixelSize: Theme.fontSizeMedium
-                                    }
-                                }
-                            }
-                            
-                            // Right: Text Panel (Editor)
-                            StyledRect {
-                                width: (parent.width - Theme.spacingM) / 2
-                                height: parent.height
-                                radius: Theme.cornerRadius
-                                color: Theme.surfaceContainer
-                                border.color: pluginRoot.isScanning ? Theme.primary : Theme.outlineVariant
-                                border.width: 1
-                                
-                                DankFlickable {
-                                    anchors.fill: parent
-                                    anchors.margins: Theme.spacingM
-                                    contentWidth: width - (Theme.spacingM * 2)
-                                    contentHeight: resultArea.implicitHeight
+                                StyledRect {
+                                    width: parent.width
+                                    height: 380
+                                    radius: Theme.cornerRadius
+                                    color: Theme.surfaceContainer
+                                    border.color: Theme.outlineVariant
+                                    border.width: 1
                                     clip: true
-
-                                    TextEdit {
-                                        id: resultArea
-                                        width: parent.width
-                                        text: pluginRoot.resultText
-                                        wrapMode: TextEdit.Wrap
-                                        font.pixelSize: Theme.fontSizeMedium
-                                        color: Theme.surfaceText
-                                        selectByMouse: true
-                                        onTextChanged: pluginRoot.resultText = text
+                                    
+                                    Image {
+                                        id: sourceImg
+                                        anchors.fill: parent
+                                        anchors.margins: Theme.spacingM
+                                        fillMode: Image.PreserveAspectFit
+                                        asynchronous: true
+                                        source: pluginRoot.sourceImage ? "file://" + pluginRoot.sourceImage + "?t=" + pluginRoot.imageTrigger : ""
                                         
-                                        Text {
-                                            text: "Text will appear here..."
+                                        StyledText {
+                                            anchors.centerIn: parent
+                                            text: "No image scanned yet"
                                             color: Theme.outlineVariant
-                                            visible: resultArea.text === ""
-                                            font: resultArea.font
+                                            visible: sourceImg.status !== Image.Ready && !pluginRoot.isScanning
+                                            font.pixelSize: Theme.fontSizeMedium
                                         }
                                     }
                                 }
 
-                                // Floating Action Row for results
                                 Row {
-                                    anchors.top: parent.top
-                                    anchors.right: parent.right
-                                    anchors.margins: Theme.spacingS
-                                    spacing: Theme.spacingXS
-                                    visible: pluginRoot.resultText !== ""
+                                    width: parent.width
+                                    spacing: Theme.spacingS
+                                    
+                                    DankButton {
+                                        text: "Scan Clipboard"
+                                        width: (parent.width - Theme.spacingS) / 2
+                                        iconName: "content_paste"
+                                        onClicked: pluginRoot.scanFromClipboard()
+                                        enabled: !pluginRoot.isScanning
+                                        backgroundColor: Theme.primaryContainer
+                                        textColor: Theme.primary
+                                    }
+                                    
+                                    DankButton {
+                                        text: "Select File"
+                                        width: (parent.width - Theme.spacingS) / 2
+                                        iconName: "image"
+                                        onClicked: pluginRoot.selectFileAndScan()
+                                        enabled: !pluginRoot.isScanning
+                                        backgroundColor: Theme.surfaceContainerHighest
+                                        textColor: Theme.surfaceText
+                                    }
+                                }
+                            }
+                            
+                            // Right Column: Text + Text Actions
+                            Column {
+                                width: (parent.width - Theme.spacingM) / 2
+                                spacing: Theme.spacingM
+                                
+                                StyledRect {
+                                    width: parent.width
+                                    height: 380
+                                    radius: Theme.cornerRadius
+                                    color: Theme.surfaceContainer
+                                    border.color: pluginRoot.isScanning ? Theme.primary : Theme.outlineVariant
+                                    border.width: 1
+                                    
+                                    DankFlickable {
+                                        anchors.fill: parent
+                                        anchors.margins: Theme.spacingM
+                                        contentWidth: width - (Theme.spacingM * 2)
+                                        contentHeight: resultArea.implicitHeight
+                                        clip: true
 
-                                    StyledRect {
-                                        width: 32
-                                        height: 32
-                                        radius: 16
-                                        color: copyMouse.containsMouse ? Theme.primaryContainer : Theme.surfaceContainerHighest
-                                        
-                                        DankIcon {
-                                            name: "content_copy"
-                                            size: 16
-                                            color: copyMouse.containsMouse ? Theme.primary : Theme.surfaceVariantText
-                                            anchors.centerIn: parent
+                                        TextEdit {
+                                            id: resultArea
+                                            width: parent.width
+                                            text: pluginRoot.resultText
+                                            wrapMode: TextEdit.Wrap
+                                            font.pixelSize: Theme.fontSizeMedium
+                                            color: Theme.surfaceText
+                                            selectByMouse: true
+                                            onTextChanged: pluginRoot.resultText = text
+                                            
+                                            Text {
+                                                text: "Text will appear here..."
+                                                color: Theme.outlineVariant
+                                                visible: resultArea.text === ""
+                                                font: resultArea.font
+                                            }
                                         }
+                                    }
+                                }
 
-                                        MouseArea {
-                                            id: copyMouse
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: pluginRoot.copyToClipboard(pluginRoot.resultText)
-                                        }
+                                Row {
+                                    width: parent.width
+                                    spacing: Theme.spacingS
+                                    
+                                    DankButton {
+                                        text: "Copy Text"
+                                        width: (parent.width - Theme.spacingS) / 2
+                                        iconName: "content_copy"
+                                        onClicked: pluginRoot.copyToClipboard(pluginRoot.resultText)
+                                        enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
+                                        backgroundColor: Theme.primaryContainer
+                                        textColor: Theme.primary
+                                    }
+                                    
+                                    DankButton {
+                                        text: "Save Text"
+                                        width: (parent.width - Theme.spacingS) / 2
+                                        iconName: "save"
+                                        onClicked: pluginRoot.saveResultToFile()
+                                        enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
+                                        backgroundColor: Theme.surfaceContainerHighest
+                                        textColor: Theme.surfaceText
                                     }
                                 }
                             }
                         }
 
-                        // Bottom Action Bar
-                        Row {
-                            width: parent.width
-                            spacing: Theme.spacingM
-
-                            DankButton {
-                                text: "Save Results"
-                                width: (parent.width - Theme.spacingM) / 2
-                                iconName: "save"
-                                backgroundColor: Theme.surfaceContainerHighest
-                                textColor: Theme.surfaceText
-                                enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
-                                onClicked: pluginRoot.saveResultToFile()
-                            }
-
-                            DankButton {
-                                text: "Clear All"
-                                width: (parent.width - Theme.spacingM) / 2
-                                iconName: "delete_sweep"
-                                backgroundColor: Theme.errorContainer
-                                textColor: Theme.error
-                                enabled: (pluginRoot.resultText !== "" || pluginRoot.sourceImage !== "") && !pluginRoot.isScanning
-                                onClicked: {
-                                    pluginRoot.resultText = "";
-                                    pluginRoot.sourceImage = "";
-                                }
+                        // Bottom: Clear All (Centered and simplified)
+                        DankButton {
+                            text: "Clear All Work"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: 200
+                            iconName: "delete_sweep"
+                            backgroundColor: Theme.errorContainer
+                            textColor: Theme.error
+                            enabled: (pluginRoot.resultText !== "" || pluginRoot.sourceImage !== "") && !pluginRoot.isScanning
+                            onClicked: {
+                                pluginRoot.resultText = "";
+                                pluginRoot.sourceImage = "";
                             }
                         }
                     }
