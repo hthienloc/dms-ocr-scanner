@@ -226,27 +226,20 @@ PluginComponent {
                                 border.width: 1
                                 clip: true
                                 
-                                DankFlickable {
+                                Image {
+                                    id: sourceImg
                                     anchors.fill: parent
                                     anchors.margins: Theme.spacingM
-                                    contentWidth: Math.max(width, sourceImg.implicitWidth)
-                                    contentHeight: Math.max(height, sourceImg.implicitHeight)
-                                    clip: true
+                                    fillMode: Image.PreserveAspectFit
+                                    asynchronous: true
+                                    source: pluginRoot.sourceImage ? "file://" + pluginRoot.sourceImage + "?t=" + pluginRoot.imageTrigger : ""
                                     
-                                    Image {
-                                        id: sourceImg
+                                    StyledText {
                                         anchors.centerIn: parent
-                                        fillMode: Image.PreserveAspectFit
-                                        asynchronous: true
-                                        source: pluginRoot.sourceImage ? "file://" + pluginRoot.sourceImage + "?t=" + pluginRoot.imageTrigger : ""
-                                        
-                                        StyledText {
-                                            anchors.centerIn: parent
-                                            text: "No image scanned yet"
-                                            color: Theme.outlineVariant
-                                            visible: sourceImg.status !== Image.Ready && !pluginRoot.isScanning
-                                            font.pixelSize: Theme.fontSizeMedium
-                                        }
+                                        text: "No image scanned yet"
+                                        color: Theme.outlineVariant
+                                        visible: sourceImg.status !== Image.Ready && !pluginRoot.isScanning
+                                        font.pixelSize: Theme.fontSizeMedium
                                     }
                                 }
                             }
