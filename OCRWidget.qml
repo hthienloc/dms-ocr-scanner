@@ -226,26 +226,16 @@ PluginComponent {
                                 border.width: 1
                                 clip: true
                                 
-                                StyledText {
-                                    anchors.top: parent.top
-                                    anchors.left: parent.left
-                                    anchors.margins: Theme.spacingS
-                                    text: "Reference Image"
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    color: Theme.outlineVariant
-                                    z: 10
-                                }
-
                                 DankFlickable {
                                     anchors.fill: parent
-                                    anchors.margins: 1
-                                    contentWidth: width
-                                    contentHeight: Math.max(height, sourceImg.implicitHeight * (width / sourceImg.implicitWidth))
+                                    anchors.margins: Theme.spacingM
+                                    contentWidth: Math.max(width, sourceImg.implicitWidth)
+                                    contentHeight: Math.max(height, sourceImg.implicitHeight)
                                     clip: true
                                     
                                     Image {
                                         id: sourceImg
-                                        width: parent.width
+                                        anchors.centerIn: parent
                                         fillMode: Image.PreserveAspectFit
                                         asynchronous: true
                                         source: pluginRoot.sourceImage ? "file://" + pluginRoot.sourceImage + "?t=" + pluginRoot.imageTrigger : ""
@@ -270,20 +260,9 @@ PluginComponent {
                                 border.color: pluginRoot.isScanning ? Theme.primary : Theme.outlineVariant
                                 border.width: 1
                                 
-                                StyledText {
-                                    anchors.top: parent.top
-                                    anchors.left: parent.left
-                                    anchors.margins: Theme.spacingS
-                                    text: "Extracted Text"
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    color: Theme.outlineVariant
-                                    z: 10
-                                }
-
                                 DankFlickable {
                                     anchors.fill: parent
                                     anchors.margins: Theme.spacingM
-                                    anchors.topMargin: Theme.spacingL + Theme.spacingS
                                     contentWidth: width - (Theme.spacingM * 2)
                                     contentHeight: resultArea.implicitHeight
                                     clip: true
