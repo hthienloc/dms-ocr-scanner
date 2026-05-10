@@ -9,11 +9,9 @@ import qs.Modules.Plugins
 PluginComponent {
     id: pluginRoot
 
-    // Popout dimensions
     popoutWidth: 800
     popoutHeight: 520
 
-    // Right-click action on pill
     pillRightClickAction: () => {
         const showPopout = pluginData.showPopoutOnRightClick ?? true;
         if (showPopout) pluginRoot.triggerPopout();
@@ -27,10 +25,10 @@ PluginComponent {
 
     function scanFromClipboard() {
         if (isScanning) return;
-        
+
         const tempImage = "/tmp/dms_ocr_input.png";
         const getClipCmd = "wl-paste -t image/png > " + tempImage + " || xclip -selection clipboard -t image/png -o > " + tempImage;
-        
+
         Proc.runCommand(
             "get-clipboard-image",
             ["sh", "-c", getClipCmd],
@@ -48,7 +46,7 @@ PluginComponent {
 
     function selectFileAndScan() {
         if (isScanning) return;
-        
+
         Proc.runCommand(
             "select-file",
             ["kdialog", "--getopenfilename", ":", "Images (*.png *.jpg *.jpeg *.webp *.bmp)"],
@@ -70,7 +68,7 @@ PluginComponent {
             sourceImage = imagePath;
             imageTrigger++;
         }
-        
+
         const lang = pluginData.ocrLanguage || "eng+vie";
         const tesseractCmd = "tesseract '" + imagePath + "' - -l " + lang;
 
@@ -143,7 +141,7 @@ PluginComponent {
                 id: pillRow
                 anchors.centerIn: parent
                 spacing: Theme.spacingXS
-                
+
                 DankIcon {
                     name: "document_scanner"
                     size: Theme.iconSizeSmall
@@ -161,217 +159,232 @@ PluginComponent {
     verticalBarPill: horizontalBarPill
 
     popoutContent: Component {
-        Item {
-            implicitWidth: pluginRoot.popoutWidth
-            implicitHeight: popout.implicitHeight
+        PopoutComponent {
+            id: popout
+            width: parent ? parent.width : 0
+            headerText: "OCR Scanner"
+            detailsText: pluginRoot.isScanning ? "Processing..." : "Ready to scan"
+            showCloseButton: true
+            focus: true
 
-            PopoutComponent {
-                id: popout
+            property var parentPopout: null
+
+            Component.onDestruction: {
+                if (!(pluginData.keepResults ?? true)) {
+                    resultText = "";
+                    sourceImage = "";
+                }
+            }
+
+            DankFlickable {
                 width: parent.width
-                headerText: "OCR Scanner"
-                detailsText: pluginRoot.isScanning ? "Processing..." : "Ready to scan"
-                showCloseButton: true
+                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM)
+                contentHeight: contentColumn.implicitHeight
+                contentWidth: width
+                clip: true
 
-                DankFlickable {
+                Column {
+                    id: contentColumn
                     width: parent.width
-                    height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM)
-                    contentHeight: contentColumn.implicitHeight
-                    contentWidth: width
-                    clip: true
+                    spacing: Theme.spacingM
 
-                    Column {
-                        id: contentColumn
+                    Row {
                         width: parent.width
                         spacing: Theme.spacingM
 
-                        // Side-by-Side Area
-                        Row {
-                            width: parent.width
+                        Column {
+                            width: (parent.width - Theme.spacingM) / 2
                             spacing: Theme.spacingM
-                            
-                            // Left Column: Image + Image Actions
-                            Column {
-                                width: (parent.width - Theme.spacingM) / 2
-                                spacing: Theme.spacingM
-                                
-                                StyledRect {
-                                    width: parent.width
-                                    height: 380
-                                    radius: Theme.cornerRadius
-                                    color: Theme.surfaceContainer
-                                    border.color: Theme.outlineVariant
-                                    border.width: 1
-                                    clip: true
-                                    
-                                    Image {
-                                        id: sourceImg
-                                        anchors.fill: parent
-                                        anchors.margins: Theme.spacingM
-                                        fillMode: Image.PreserveAspectFit
-                                        asynchronous: true
-                                        source: pluginRoot.sourceImage ? "file://" + pluginRoot.sourceImage + "?t=" + pluginRoot.imageTrigger : ""
-                                        
-                                        StyledText {
-                                            anchors.centerIn: parent
-                                            text: "No image scanned yet"
-                                            color: Theme.outlineVariant
-                                            visible: sourceImg.status !== Image.Ready && !pluginRoot.isScanning
-                                            font.pixelSize: Theme.fontSizeMedium
-                                        }
+
+                            StyledRect {
+                                width: parent.width
+                                height: 380
+                                radius: Theme.cornerRadius
+                                color: Theme.surfaceContainer
+                                border.color: Theme.outlineVariant
+                                border.width: 1
+                                clip: true
+
+                                Image {
+                                    id: sourceImg
+                                    anchors.fill: parent
+                                    anchors.margins: Theme.spacingM
+                                    fillMode: Image.PreserveAspectFit
+                                    asynchronous: true
+                                    source: pluginRoot.sourceImage ? "file://" + pluginRoot.sourceImage + "?t=" + pluginRoot.imageTrigger : ""
+
+                                    StyledText {
+                                        anchors.centerIn: parent
+                                        text: "No image scanned yet"
+                                        color: Theme.outlineVariant
+                                        visible: sourceImg.status !== Image.Ready && !pluginRoot.isScanning
+                                        font.pixelSize: Theme.fontSizeMedium
                                     }
                                 }
 
-                                Row {
-                                    width: parent.width
-                                    spacing: Theme.spacingS
-                                    
-                                    DankButton {
-                                        text: "Scan Clipboard"
-                                        width: (parent.width - Theme.spacingS) / 2
-                                        iconName: "content_paste"
-                                        onClicked: pluginRoot.scanFromClipboard()
-                                        enabled: !pluginRoot.isScanning
-                                        backgroundColor: Theme.primaryContainer
-                                        textColor: Theme.primary
+                                DankButton {
+                                    anchors.top: parent.top
+                                    anchors.right: parent.right
+                                    anchors.margins: Theme.spacingS
+                                    width: 32
+                                    height: 32
+                                    iconName: "delete"
+                                    onClicked: {
+                                        pluginRoot.sourceImage = ""
+                                        pluginRoot.resultText = ""
                                     }
-                                    
-                                    DankButton {
-                                        text: "Select File"
-                                        width: (parent.width - Theme.spacingS) / 2
-                                        iconName: "image"
-                                        onClicked: pluginRoot.selectFileAndScan()
-                                        enabled: !pluginRoot.isScanning
-                                        backgroundColor: Theme.surfaceContainerHighest
-                                        textColor: Theme.surfaceText
-                                    }
+                                    enabled: (pluginRoot.sourceImage !== "" || pluginRoot.resultText !== "") && !pluginRoot.isScanning
+                                    backgroundColor: Theme.errorContainer
+                                    textColor: Theme.error
                                 }
                             }
-                            
-                            // Right Column: Text + Text Actions
-                            Column {
-                                width: (parent.width - Theme.spacingM) / 2
-                                spacing: Theme.spacingM
-                                
-                                StyledRect {
-                                    width: parent.width
-                                    height: 380
-                                    radius: Theme.cornerRadius
-                                    color: Theme.surfaceContainer
-                                    border.color: pluginRoot.isScanning ? Theme.primary : Theme.outlineVariant
-                                    border.width: 1
-                                    
-                                    DankFlickable {
-                                        anchors.fill: parent
-                                        anchors.margins: Theme.spacingM
-                                        contentWidth: width - (Theme.spacingM * 2)
-                                        contentHeight: resultArea.implicitHeight
-                                        clip: true
 
-                                        TextEdit {
-                                            id: resultArea
-                                            width: parent.width
-                                            text: pluginRoot.resultText
-                                            wrapMode: TextEdit.Wrap
-                                            font.pixelSize: Theme.fontSizeMedium
-                                            color: Theme.surfaceText
-                                            selectByMouse: true
-                                            onTextChanged: pluginRoot.resultText = text
-                                            
-                                            Text {
-                                                text: "Text will appear here..."
-                                                color: Theme.outlineVariant
-                                                visible: resultArea.text === ""
-                                                font: resultArea.font
-                                            }
-                                        }
-                                    }
+                            Row {
+                                width: parent.width
+                                spacing: Theme.spacingS
+
+                                DankButton {
+                                    text: "Scan Clipboard"
+                                    width: (parent.width - Theme.spacingS) / 2
+                                    iconName: "content_paste"
+                                    onClicked: pluginRoot.scanFromClipboard()
+                                    enabled: !pluginRoot.isScanning
+                                    backgroundColor: Theme.primaryContainer
+                                    textColor: Theme.primary
                                 }
 
-                                Row {
-                                    width: parent.width
-                                    spacing: Theme.spacingS
-                                    
-                                    DankButton {
-                                        text: "Copy Text"
-                                        width: (parent.width - Theme.spacingS) / 2
-                                        iconName: "content_copy"
-                                        onClicked: pluginRoot.copyToClipboard(pluginRoot.resultText)
-                                        enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
-                                        backgroundColor: Theme.primaryContainer
-                                        textColor: Theme.primary
-                                    }
-                                    
-                                    DankButton {
-                                        text: "Save Text"
-                                        width: (parent.width - Theme.spacingS) / 2
-                                        iconName: "save"
-                                        onClicked: pluginRoot.saveResultToFile()
-                                        enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
-                                        backgroundColor: Theme.surfaceContainerHighest
-                                        textColor: Theme.surfaceText
-                                    }
+                                DankButton {
+                                    text: "Select File"
+                                    width: (parent.width - Theme.spacingS) / 2
+                                    iconName: "image"
+                                    onClicked: pluginRoot.selectFileAndScan()
+                                    enabled: !pluginRoot.isScanning
+                                    backgroundColor: Theme.surfaceContainerHighest
+                                    textColor: Theme.surfaceText
                                 }
                             }
                         }
 
-                        // Bottom: Clear All (Centered and simplified)
-                        DankButton {
-                            text: "Clear All Work"
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: 200
-                            iconName: "delete_sweep"
-                            backgroundColor: Theme.errorContainer
-                            textColor: Theme.error
-                            enabled: (pluginRoot.resultText !== "" || pluginRoot.sourceImage !== "") && !pluginRoot.isScanning
-                            onClicked: {
-                                pluginRoot.resultText = "";
-                                pluginRoot.sourceImage = "";
+                        Column {
+                            width: (parent.width - Theme.spacingM) / 2
+                            spacing: Theme.spacingM
+
+                            StyledRect {
+                                width: parent.width
+                                height: 380
+                                radius: Theme.cornerRadius
+                                color: Theme.surfaceContainer
+                                border.color: pluginRoot.isScanning ? Theme.primary : Theme.outlineVariant
+                                border.width: 1
+
+                                DankFlickable {
+                                    anchors.fill: parent
+                                    anchors.margins: Theme.spacingM
+                                    contentWidth: width - (Theme.spacingM * 2)
+                                    contentHeight: resultArea.implicitHeight
+                                    clip: true
+
+                                    TextEdit {
+                                        id: resultArea
+                                        width: parent.width
+                                        text: pluginRoot.resultText
+                                        wrapMode: TextEdit.Wrap
+                                        font.pixelSize: Theme.fontSizeMedium
+                                        color: Theme.surfaceText
+                                        selectByMouse: true
+                                        onTextChanged: pluginRoot.resultText = text
+
+                                        Text {
+                                            text: "Text will appear here..."
+                                            color: Theme.outlineVariant
+                                            visible: resultArea.text === ""
+                                            font: resultArea.font
+                                        }
+                                    }
+                                }
+
+                                DankButton {
+                                    anchors.top: parent.top
+                                    anchors.right: parent.right
+                                    anchors.margins: Theme.spacingS
+                                    width: 32
+                                    height: 32
+                                    iconName: "delete"
+                                    onClicked: pluginRoot.resultText = ""
+                                    enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
+                                    backgroundColor: Theme.errorContainer
+                                    textColor: Theme.error
+                                }
+                            }
+
+                            Row {
+                                width: parent.width
+                                spacing: Theme.spacingS
+
+                                DankButton {
+                                    text: "Copy Text"
+                                    width: (parent.width - Theme.spacingS) / 2
+                                    iconName: "content_copy"
+                                    onClicked: pluginRoot.copyToClipboard(pluginRoot.resultText)
+                                    enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
+                                    backgroundColor: Theme.primaryContainer
+                                    textColor: Theme.primary
+                                }
+
+                                DankButton {
+                                    text: "Save Text"
+                                    width: (parent.width - Theme.spacingS) / 2
+                                    iconName: "save"
+                                    onClicked: pluginRoot.saveResultToFile()
+                                    enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
+                                    backgroundColor: Theme.surfaceContainerHighest
+                                    textColor: Theme.surfaceText
+                                }
                             }
                         }
                     }
+                }
             }
         }
+    }
 
-            // Global Scanning Overlay
-            Rectangle {
-                anchors.fill: parent
-                z: 100
-                visible: opacity > 0
-                opacity: pluginRoot.isScanning ? 1 : 0
-                color: Theme.withAlpha(Theme.surfaceContainer, 0.9)
-                radius: Theme.cornerRadius
+    Rectangle {
+        anchors.fill: parent
+        z: 100
+        visible: opacity > 0
+        opacity: pluginRoot.isScanning ? 1 : 0
+        color: Theme.withAlpha(Theme.surfaceContainer, 0.9)
+        radius: Theme.cornerRadius
 
-                Behavior on opacity {
-                    NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing }
-                }
+        Behavior on opacity {
+            NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing }
+        }
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: Theme.spacingL
-                    
-                    BusyIndicator {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        running: pluginRoot.isScanning
-                        implicitWidth: 64
-                        implicitHeight: 64
-                    }
-                    
-                    StyledText {
-                        text: "Analyzing Image..."
-                        color: Theme.primary
-                        font.pixelSize: Theme.fontSizeLarge
-                        font.weight: Font.Medium
-                        anchors.horizontalCenter: parent.horizontalCenter
-                    }
-                    
-                    StyledText {
-                        text: "Please wait a moment"
-                        color: Theme.surfaceVariantText
-                        font.pixelSize: Theme.fontSizeMedium
-                        opacity: 0.8
-                        anchors.horizontalCenter: parent.horizontalCenter
-                    }
-                }
+        Column {
+            anchors.centerIn: parent
+            spacing: Theme.spacingL
+
+            BusyIndicator {
+                anchors.horizontalCenter: parent.horizontalCenter
+                running: pluginRoot.isScanning
+                implicitWidth: 64
+                implicitHeight: 64
+            }
+
+            StyledText {
+                text: "Analyzing Image..."
+                color: Theme.primary
+                font.pixelSize: Theme.fontSizeLarge
+                font.weight: Font.Medium
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
+            StyledText {
+                text: "Please wait a moment"
+                color: Theme.surfaceVariantText
+                font.pixelSize: Theme.fontSizeMedium
+                opacity: 0.8
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
     }
