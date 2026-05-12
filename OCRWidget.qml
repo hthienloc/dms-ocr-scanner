@@ -21,6 +21,7 @@ PluginComponent {
 
     property string resultText: ""
     property bool isScanning: false
+    property bool isSaving: false
     property string sourceImage: ""
     property int imageTrigger: 0
 
@@ -167,6 +168,8 @@ PluginComponent {
 
     function saveResultToFile() {
         if (!resultText) return;
+        isSaving = true;
+        pluginRoot.closePopout();
         saveBrowserModal.open();
     }
 
@@ -236,16 +239,33 @@ PluginComponent {
         defaultFileName: "ocr_result.txt"
         fileExtensions: ["*.txt"]
         onFileSelected: filePath => {
+            isSaving = true;
+            
+            // Clean path (remove file:// prefix if present)
+            let cleanPath = filePath;
+            if (cleanPath.startsWith("file://")) {
+                cleanPath = cleanPath.substring(7);
+            } else if (cleanPath.startsWith("file: ")) {
+                cleanPath = cleanPath.substring(6);
+            }
+            
             Proc.runCommand(
                 "write-file",
-                ["sh", "-c", "echo \"" + resultText.replace(/"/g, "\\\"") + "\" > '" + filePath + "'"],
+                // Passing resultText as $1 and cleanPath as $2 to sh -c
+                ["sh", "-c", "printf '%s' \"$1\" > \"$2\"", "sh", resultText, cleanPath],
                 (stdout, exitCode) => {
-                    if (exitCode === 0) ToastService.showInfo("Saved successfully!");
+                    isSaving = false;
+                    if (exitCode === 0) {
+                        ToastService.showInfo("Saved successfully!");
+                    } else {
+                        ToastService.showError("Failed to save: " + exitCode);
+                    }
                 },
                 0
             );
             close();
         }
+        onDialogClosed: isSaving = false
     }
 
     verticalBarPill: horizontalBarPill
@@ -262,7 +282,7 @@ PluginComponent {
             property var parentPopout: null
 
             Component.onDestruction: {
-                if (!(pluginData.keepResults ?? true)) {
+                if (!pluginRoot.isSaving && !(pluginData.keepResults ?? true)) {
                     resultText = "";
                     sourceImage = "";
                 }
