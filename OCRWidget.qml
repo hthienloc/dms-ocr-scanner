@@ -137,16 +137,16 @@ PluginComponent {
 
     horizontalBarPill: Component {
         Item {
-            implicitWidth: pillRow.implicitWidth + Theme.spacingM
-            implicitHeight: 32
+            implicitWidth: horizontalRow.implicitWidth
+            implicitHeight: 24
+            anchors.verticalCenter: parent.verticalCenter
 
             property bool draggingOver: false
 
             Row {
-                id: pillRow
-                anchors.centerIn: parent
+                id: horizontalRow
                 spacing: Theme.spacingXS
-
+                anchors.verticalCenter: parent.verticalCenter
                 scale: draggingOver ? 1.2 : 1.0
                 Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
 
@@ -154,11 +154,14 @@ PluginComponent {
                     name: "document_scanner"
                     size: Theme.iconSizeSmall
                     color: draggingOver ? Theme.primary : (pluginRoot.isScanning ? Theme.primary : Theme.surfaceVariantText)
+                    anchors.verticalCenter: parent.verticalCenter
                 }
                 StyledText {
                     text: "OCR"
+                    font.pixelSize: Theme.fontSizeSmall
+                    color: pluginRoot.isScanning ? Theme.primary : Theme.surfaceVariantText
+                    anchors.verticalCenter: parent.verticalCenter
                     visible: (pluginData.showTextInPill ?? true) && pluginRoot.isScanning
-                    color: Theme.primary
                 }
             }
 
