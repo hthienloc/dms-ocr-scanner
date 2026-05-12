@@ -11,7 +11,7 @@ PluginComponent {
     id: pluginRoot
 
     popoutWidth: 800
-    popoutHeight: 520
+    popoutHeight: 560
 
     pillRightClickAction: () => {
         const showPopout = pluginData.showPopoutOnRightClick ?? true;
@@ -237,20 +237,9 @@ PluginComponent {
                 }
             }
 
-            Row {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top
-                anchors.topMargin: Theme.spacingS
-                spacing: Theme.spacingXS
-                DankIcon { name: "lightbulb"; size: 14; color: Theme.surfaceVariantText }
-                StyledText { text: "Tip: Drop image onto pill icon to scan quickly"; color: Theme.surfaceVariantText; font.pixelSize: Theme.fontSizeSmall }
-            }
-
             DankFlickable {
-                anchors.top: parent.top
-                anchors.topMargin: 28
                 width: parent.width
-                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM - 28)
+                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM - ((pluginData.showTip ?? true) ? 28 : 0))
                 contentHeight: contentColumn.implicitHeight
                 contentWidth: width
                 clip: true
@@ -259,6 +248,14 @@ PluginComponent {
                     id: contentColumn
                     width: parent.width
                     spacing: Theme.spacingM
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: Theme.spacingXS
+                        visible: (pluginData.showTip ?? true)
+                        DankIcon { name: "lightbulb"; size: 14; color: Theme.surfaceVariantText }
+                        StyledText { text: "Tip: Drop image onto pill icon to scan quickly"; color: Theme.surfaceVariantText; font.pixelSize: Theme.fontSizeSmall }
+                    }
 
                     Row {
                         width: parent.width

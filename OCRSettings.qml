@@ -140,6 +140,11 @@ PluginSettings {
                     label: "Show popout on right-click"
                     defaultValue: true
                 }
+                ToggleSetting {
+                    settingKey: "showTip"
+                    label: "Show drag-drop tip"
+                    defaultValue: true
+                }
             }
         }
     }
