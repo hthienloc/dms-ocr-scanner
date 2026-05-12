@@ -118,16 +118,11 @@ PluginComponent {
 
     function copyToClipboard(text) {
         if (!text) return;
-        Proc.runCommand(
-            "clipboard-copy",
-            ["sh", "-c", "echo -n \"" + text.replace(/"/g, "\\\"") + "\" | wl-copy || echo -n \"" + text.replace(/"/g, "\\\"") + "\" | xclip -selection clipboard"],
-            (stdout, exitCode) => {
-                if (exitCode === 0) {
-                    ToastService.showInfo("Copied to clipboard!");
-                }
-            },
-            0
-        );
+        DMSService.sendRequest("clipboard.copy", { "text": text }, function(response) {
+            if (!response.error) {
+                ToastService.showInfo("Copied to clipboard!");
+            }
+        });
     }
 
     function saveResultToFile() {
