@@ -237,9 +237,20 @@ PluginComponent {
                 }
             }
 
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: Theme.spacingS
+                spacing: Theme.spacingXS
+                DankIcon { name: "lightbulb"; size: 14; color: Theme.surfaceVariantText }
+                StyledText { text: "Tip: Drop image onto pill icon to scan quickly"; color: Theme.surfaceVariantText; font.pixelSize: Theme.fontSizeSmall }
+            }
+
             DankFlickable {
+                anchors.top: parent.top
+                anchors.topMargin: 28
                 width: parent.width
-                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM)
+                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM - 28)
                 contentHeight: contentColumn.implicitHeight
                 contentWidth: width
                 clip: true
