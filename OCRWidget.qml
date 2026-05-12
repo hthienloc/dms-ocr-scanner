@@ -5,6 +5,7 @@ import qs.Common
 import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
+import qs.Modals.FileBrowser
 
 PluginComponent {
     id: pluginRoot
@@ -45,22 +46,36 @@ PluginComponent {
     }
 
     function selectFileAndScan() {
-        if (isScanning) return;
+        fileBrowserModal.open();
+    }
 
-        Proc.runCommand(
-            "select-file",
-            ["kdialog", "--getopenfilename", ":", "Images (*.png *.jpg *.jpeg *.webp *.bmp)"],
-            (stdout, exitCode) => {
-                const filePath = stdout.trim();
-                if (exitCode === 0 && filePath !== "") {
+    function scanFromUrl(url) {
+        if (!url || isScanning) return;
+        
+        let path = "";
+        if (url.startsWith("file://")) {
+            path = url.substring(7);
+            isScanning = true;
+            runTesseract(path);
+        } else if (url.startsWith("http://") || url.startsWith("https://")) {
+            const tempFile = "/tmp/dms_ocr_dl_" + Date.now();
+            Proc.runCommand("download-image", ["curl", "-L", url, "-o", tempFile], (stdout, exitCode) => {
+                if (exitCode === 0) {
                     isScanning = true;
-                    sourceImage = filePath;
-                    imageTrigger++;
-                    runTesseract(filePath);
+                    runTesseract(tempFile);
+                } else {
+                    ToastService.showError("Failed to download image from URL.");
                 }
-            },
-            0
-        );
+            });
+        } else {
+            // Assume it's a direct path if it starts with /
+            if (url.startsWith("/")) {
+                isScanning = true;
+                runTesseract(url);
+            } else {
+                ToastService.showError("Invalid image source.");
+            }
+        }
     }
 
     function runTesseract(imagePath) {
@@ -112,24 +127,7 @@ PluginComponent {
 
     function saveResultToFile() {
         if (!resultText) return;
-        Proc.runCommand(
-            "save-file",
-            ["kdialog", "--getsavefilename", ":", "*.txt"],
-            (stdout, exitCode) => {
-                const filePath = stdout.trim();
-                if (exitCode === 0 && filePath !== "") {
-                    Proc.runCommand(
-                        "write-file",
-                        ["sh", "-c", "echo \"" + resultText.replace(/"/g, "\\\"") + "\" > '" + filePath + "'"],
-                        (stdout, exitCode) => {
-                            if (exitCode === 0) ToastService.showInfo("Saved successfully!");
-                        },
-                        0
-                    );
-                }
-            },
-            0
-        );
+        saveBrowserModal.open();
     }
 
     horizontalBarPill: Component {
@@ -153,6 +151,40 @@ PluginComponent {
                     color: Theme.primary
                 }
             }
+        }
+    }
+
+    FileBrowserModal {
+        id: fileBrowserModal
+        browserTitle: "Select Image to Scan"
+        browserIcon: "image"
+        fileExtensions: ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp"]
+        onFileSelected: path => {
+            pluginRoot.isScanning = true;
+            pluginRoot.sourceImage = path;
+            pluginRoot.imageTrigger++;
+            pluginRoot.runTesseract(path);
+            close();
+        }
+    }
+
+    FileBrowserModal {
+        id: saveBrowserModal
+        browserTitle: "Save OCR Result"
+        browserIcon: "save"
+        saveMode: true
+        defaultFileName: "ocr_result.txt"
+        fileExtensions: ["*.txt"]
+        onFileSelected: filePath => {
+            Proc.runCommand(
+                "write-file",
+                ["sh", "-c", "echo \"" + resultText.replace(/"/g, "\\\"") + "\" > '" + filePath + "'"],
+                (stdout, exitCode) => {
+                    if (exitCode === 0) ToastService.showInfo("Saved successfully!");
+                },
+                0
+            );
+            close();
         }
     }
 
