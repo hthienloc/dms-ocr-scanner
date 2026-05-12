@@ -55,12 +55,16 @@ PluginComponent {
         let path = "";
         if (url.startsWith("file://")) {
             path = url.substring(7);
+            sourceImage = path;
+            imageTrigger++;
             isScanning = true;
             runTesseract(path);
         } else if (url.startsWith("http://") || url.startsWith("https://")) {
             const tempFile = "/tmp/dms_ocr_dl_" + Date.now();
             Proc.runCommand("download-image", ["curl", "-L", url, "-o", tempFile], (stdout, exitCode) => {
                 if (exitCode === 0) {
+                    sourceImage = tempFile;
+                    imageTrigger++;
                     isScanning = true;
                     runTesseract(tempFile);
                 } else {
@@ -68,8 +72,9 @@ PluginComponent {
                 }
             });
         } else {
-            // Assume it's a direct path if it starts with /
             if (url.startsWith("/")) {
+                sourceImage = url;
+                imageTrigger++;
                 isScanning = true;
                 runTesseract(url);
             } else {
@@ -135,20 +140,44 @@ PluginComponent {
             implicitWidth: pillRow.implicitWidth + Theme.spacingM
             implicitHeight: 32
 
+            property bool draggingOver: false
+
             Row {
                 id: pillRow
                 anchors.centerIn: parent
                 spacing: Theme.spacingXS
 
+                scale: draggingOver ? 1.2 : 1.0
+                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+
                 DankIcon {
                     name: "document_scanner"
                     size: Theme.iconSizeSmall
-                    color: pluginRoot.isScanning ? Theme.primary : Theme.surfaceVariantText
+                    color: draggingOver ? Theme.primary : (pluginRoot.isScanning ? Theme.primary : Theme.surfaceVariantText)
                 }
                 StyledText {
                     text: "OCR"
-                    visible: pluginRoot.isScanning
+                    visible: (pluginData.showTextInPill ?? true) && pluginRoot.isScanning
                     color: Theme.primary
+                }
+            }
+
+            DropArea {
+                anchors.fill: parent
+                onEntered: draggingOver = true
+                onExited: draggingOver = false
+                onDropped: (drop) => {
+                    draggingOver = false;
+                    let urls = [];
+                    if (drop.hasUrls) {
+                        urls = drop.urls.map(url => url.toString());
+                    } else if (drop.hasText) {
+                        urls = [drop.text];
+                    }
+                    pluginRoot.triggerPopout();
+                    if (urls.length > 0) {
+                        urls.forEach(url => pluginRoot.scanFromUrl(url));
+                    }
                 }
             }
         }
@@ -380,44 +409,4 @@ PluginComponent {
         }
     }
 
-    Rectangle {
-        anchors.fill: parent
-        z: 100
-        visible: opacity > 0
-        opacity: pluginRoot.isScanning ? 1 : 0
-        color: Theme.withAlpha(Theme.surfaceContainer, 0.9)
-        radius: Theme.cornerRadius
-
-        Behavior on opacity {
-            NumberAnimation { duration: Theme.shortDuration; easing.type: Theme.standardEasing }
-        }
-
-        Column {
-            anchors.centerIn: parent
-            spacing: Theme.spacingL
-
-            BusyIndicator {
-                anchors.horizontalCenter: parent.horizontalCenter
-                running: pluginRoot.isScanning
-                implicitWidth: 64
-                implicitHeight: 64
-            }
-
-            StyledText {
-                text: "Analyzing Image..."
-                color: Theme.primary
-                font.pixelSize: Theme.fontSizeLarge
-                font.weight: Font.Medium
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-
-            StyledText {
-                text: "Please wait a moment"
-                color: Theme.surfaceVariantText
-                font.pixelSize: Theme.fontSizeMedium
-                opacity: 0.8
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-        }
-    }
 }
