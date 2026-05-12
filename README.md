@@ -21,8 +21,7 @@ A dedicated OCR (Optical Character Recognition) plugin for [Dank Material Shell]
 
 - `tesseract`: The OCR engine.
 - `tesseract-data-<lang>`: Language data for Tesseract (e.g., `tesseract-data-eng`, `tesseract-data-vie`).
-- `scrot`: For capturing screen areas.
-- `wl-clipboard`: For clipboard image handling.
+- `wl-clipboard`: For clipboard image handling (reading images from clipboard).
 - `curl`: For remote image scanning.
 
 ### Installation (Fedora)
