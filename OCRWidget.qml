@@ -52,34 +52,68 @@ PluginComponent {
     function scanFromUrl(url) {
         if (!url || isScanning) return;
         
-        let path = "";
+        const convertSvgToPng = function(inputPath, callback) {
+            const outputPath = "/tmp/dms_ocr_svg_" + Date.now() + ".png";
+            Proc.runCommand(
+                "svg-convert",
+                ["rsvg-convert", "-w", "2000", "-h", "2000", "-f", "png", "-o", outputPath, inputPath],
+                (stdout, exitCode) => {
+                    if (exitCode === 0) {
+                        callback(outputPath);
+                    } else {
+                        Proc.runCommand(
+                            "svg-convert-fallback",
+                            ["convert", "-background", "white", "-alpha", "remove", inputPath, outputPath],
+                            (stdout2, exitCode2) => {
+                                if (exitCode2 === 0) {
+                                    callback(outputPath);
+                                } else {
+                                    callback(null);
+                                }
+                            },
+                            0
+                        );
+                    }
+                },
+                0
+            );
+        };
+
+        const processImage = function(path) {
+            if (path.toLowerCase().endsWith(".svg")) {
+                convertSvgToPng(path, function(convertedPath) {
+                    if (convertedPath) {
+                        sourceImage = convertedPath;
+                        imageTrigger++;
+                        isScanning = true;
+                        runTesseract(convertedPath);
+                    } else {
+                        ToastService.showError("Failed to convert SVG to PNG. Install rsvg-convert or imagemagick.");
+                    }
+                });
+            } else {
+                sourceImage = path;
+                imageTrigger++;
+                isScanning = true;
+                runTesseract(path);
+            }
+        };
+
         if (url.startsWith("file://")) {
-            path = url.substring(7);
-            sourceImage = path;
-            imageTrigger++;
-            isScanning = true;
-            runTesseract(path);
+            processImage(url.substring(7));
         } else if (url.startsWith("http://") || url.startsWith("https://")) {
             const tempFile = "/tmp/dms_ocr_dl_" + Date.now();
             Proc.runCommand("download-image", ["curl", "-L", url, "-o", tempFile], (stdout, exitCode) => {
                 if (exitCode === 0) {
-                    sourceImage = tempFile;
-                    imageTrigger++;
-                    isScanning = true;
-                    runTesseract(tempFile);
+                    processImage(tempFile);
                 } else {
                     ToastService.showError("Failed to download image from URL.");
                 }
             });
+        } else if (url.startsWith("/")) {
+            processImage(url);
         } else {
-            if (url.startsWith("/")) {
-                sourceImage = url;
-                imageTrigger++;
-                isScanning = true;
-                runTesseract(url);
-            } else {
-                ToastService.showError("Invalid image source.");
-            }
+            ToastService.showError("Invalid image source.");
         }
     }
 
