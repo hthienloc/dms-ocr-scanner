@@ -148,4 +148,95 @@ PluginSettings {
             }
         }
     }
+
+    StyledRect {
+        width: parent.width
+        height: installColumn.implicitHeight + Theme.spacingL * 2
+        radius: Theme.cornerRadius
+        color: Theme.surfaceContainer
+
+        Column {
+            id: installColumn
+            anchors.fill: parent
+            anchors.margins: Theme.spacingL
+            spacing: Theme.spacingM
+
+            StyledText {
+                text: "Installation"
+                font.pixelSize: Theme.fontSizeMedium
+                font.weight: Font.Medium
+                color: Theme.surfaceText
+            }
+
+            StyledText {
+                width: parent.width
+                text: "Install the required packages:"
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.surfaceVariantText
+            }
+
+            Column {
+                width: parent.width
+                spacing: Theme.spacingS
+
+                Repeater {
+                    model: [
+                        { cmd: "sudo dnf install tesseract tesseract-langpack-eng tesseract-langpack-vie wl-clipboard curl", label: "Fedora" },
+                        { cmd: "sudo pacman -S tesseract tesseract-data-eng tesseract-data-vie wl-clipboard curl", label: "Arch Linux" },
+                        { cmd: "sudo apt install tesseract tesseract-ocr-eng tesseract-ocr-vie wl-clipboard curl", label: "Debian/Ubuntu" },
+                        { cmd: "sudo zypper install tesseract tesseract-langpack-en tesseract-langpack-vi wl-clipboard curl", label: "openSUSE" }
+                    ]
+
+                    delegate: Column {
+                        width: parent.width
+                        spacing: 4
+
+                        StyledText {
+                            text: modelData.label
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.bold: true
+                            color: Theme.surfaceVariantText
+                        }
+
+                        Rectangle {
+                            width: parent.width
+                            height: Math.max(40, cmdRow.implicitHeight + 16)
+                            color: Theme.surfaceContainerHigh
+                            radius: 4
+
+                            Row {
+                                id: cmdRow
+                                width: parent.width - 16
+                                anchors.centerIn: parent
+                                spacing: 8
+
+                                StyledText {
+                                    width: parent.width - 32
+                                    text: modelData.cmd
+                                    font.family: "Monospace"
+                                    font.pixelSize: Theme.fontSizeSmall
+                                    color: Theme.secondary
+                                    wrapMode: Text.Wrap
+                                }
+
+                                DankButton {
+                                    width: 24
+                                    height: 24
+                                    iconName: "content_copy"
+                                    backgroundColor: "transparent"
+                                    textColor: Theme.primary
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    onClicked: {
+                                        Proc.runCommand("copy-cmd", ["wl-copy", "--", modelData.cmd], function() {
+                                            ToastService.showInfo("Copied to clipboard");
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
