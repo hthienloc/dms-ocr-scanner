@@ -191,13 +191,6 @@ PluginComponent {
                     color: draggingOver ? Theme.primary : (pluginRoot.isScanning ? Theme.primary : Theme.surfaceVariantText)
                     anchors.verticalCenter: parent.verticalCenter
                 }
-                StyledText {
-                    text: "OCR"
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: pluginRoot.isScanning ? Theme.primary : Theme.surfaceVariantText
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: (pluginData.showTextInPill ?? true) && pluginRoot.isScanning
-                }
             }
 
             DropArea {
