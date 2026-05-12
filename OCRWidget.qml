@@ -11,7 +11,7 @@ PluginComponent {
     id: pluginRoot
 
     popoutWidth: 800
-    popoutHeight: 560
+    popoutHeight: 600
 
     pillRightClickAction: () => {
         const showPopout = pluginData.showPopoutOnRightClick ?? true;
@@ -239,7 +239,7 @@ PluginComponent {
 
             DankFlickable {
                 width: parent.width
-                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM - ((pluginData.showTip ?? true) ? 28 : 0))
+                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM - ((pluginData.showTip ?? true) ? 40 : 0))
                 contentHeight: contentColumn.implicitHeight
                 contentWidth: width
                 clip: true
