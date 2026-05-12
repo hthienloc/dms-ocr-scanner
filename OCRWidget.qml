@@ -109,7 +109,13 @@ PluginComponent {
                         }
                     }
                 } else {
-                    ToastService.showError("Tesseract failed. Is it installed?");
+                    if (stdout && stdout.includes("Invalid")) {
+                        ToastService.showError("Invalid or unsupported image format.");
+                    } else if (stdout && stdout.includes("read")) {
+                        ToastService.showError("Could not read the file. Make sure it's a valid image.");
+                    } else {
+                        ToastService.showError("Tesseract failed. Is it installed?");
+                    }
                 }
             },
             0
