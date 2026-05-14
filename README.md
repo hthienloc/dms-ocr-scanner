@@ -1,50 +1,39 @@
-# OCR Scanner Plugin
+# OCR Scanner
 
-A dedicated OCR (Optical Character Recognition) plugin for [Dank Material Shell](https://github.com/AvengeMedia/DankMaterialShell). Extract text from images in your clipboard or files instantly using the powerful Tesseract engine.
+Extract text from images using Tesseract OCR.
 
 <img src="screenshot.png" width="400" alt="Screenshot">
 
+## Install
+
+[<kbd>Install Now</kbd>](dms://plugin/install/ocr-scanner)
+
+Or manually:
+```bash
+git clone https://github.com/hthienloc/dms-ocr-scanner ~/.config/DankMaterialShell/plugins/ocrScanner
+```
+
 ## Features
 
-- **Native OCR**: Uses Tesseract for high-quality text recognition.
-- **Drag & Drop Support**: Drag images or URLs directly onto the status bar icon to scan instantly.
-- **Clipboard Integration**: Scan the latest image from your clipboard with a single click.
-- **Native Experience**: Fully integrated with DMS theme and native dialogs.
-- **Dynamic Language Discovery**: Automatically detects all Tesseract languages installed on your system.
-- **Multi-language Support**: Select multiple languages simultaneously (e.g., English + Vietnamese) for mixed-content recognition.
-- **Auto-copy**: Automatically copy the extracted text back to your clipboard after scanning.
-- **Save to File**: Export the extracted text as a `.txt` file.
-- **Editable Result**: Refine the extracted text directly in the popout before copying or saving.
-- **Persistence Settings**: Choose whether to keep the results after closing the popout.
+- **Clipboard scan** - One click to extract text from clipboard image
+- **Multi-language** - English, Vietnamese, and 100+ other languages
+- **Auto-copy** - Extracted text automatically copied to clipboard
+- **Save to file** - Export as .txt
+
+## Usage
+
+| Action | Result |
+|--------|--------|
+| Left click | Open scanner |
+| Right click | Scan from clipboard |
 
 ## Requirements
 
-- `tesseract`: The OCR engine.
-- `tesseract-data-<lang>`: Language data for Tesseract (e.g., `tesseract-data-eng`, `tesseract-data-vie`).
-- `wl-clipboard`: For clipboard image handling (reading images from clipboard).
-- `curl`: For remote image scanning.
-
-### Installation (Fedora)
-
-```bash
-sudo dnf install tesseract tesseract-langpack-eng tesseract-langpack-vie wl-clipboard curl
-```
-
-### Installation (Arch Linux)
-
-```bash
-sudo pacman -S tesseract tesseract-data-eng tesseract-data-vie wl-clipboard curl
-```
-
-## Installation
-
-1. Create a directory for the plugin:
-   ```bash
-   mkdir -p ~/.config/DankMaterialShell/plugins/ocrScanner
-   ```
-2. Copy all `.qml` and `plugin.json` files to that directory.
-3. Reload DMS or scan for plugins in DMS Settings.
+| Package | Installation |
+|---------|--------------|
+| `tesseract` | `sudo dnf install tesseract` / `sudo pacman -S tesseract` |
+| `tesseract-data-*` | Language packs (e.g., `tesseract-langpack-eng`) |
 
 ## License
 
-GPL-3.0 - See [LICENSE](LICENSE)
+GPL-3.0
