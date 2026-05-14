@@ -7,7 +7,7 @@ Extract text from images using Tesseract OCR.
 ## Install
 
 ```
-dms://plugin/install/ocr-scanner
+dms://plugin/install/ocrScanner
 ```
 
 Or manually:
