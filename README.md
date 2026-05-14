@@ -6,7 +6,9 @@ Extract text from images using Tesseract OCR.
 
 ## Install
 
-[Install Now](dms://plugin/install/ocr-scanner)
+```
+dms://plugin/install/ocr-scanner
+```
 
 Or manually:
 ```bash
