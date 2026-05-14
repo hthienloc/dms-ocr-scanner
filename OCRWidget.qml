@@ -241,7 +241,6 @@ PluginComponent {
         onFileSelected: filePath => {
             isSaving = true;
             
-            // Clean path (remove file:// prefix if present)
             let cleanPath = filePath;
             if (cleanPath.startsWith("file://")) {
                 cleanPath = cleanPath.substring(7);
@@ -251,7 +250,6 @@ PluginComponent {
             
             Proc.runCommand(
                 "write-file",
-                // Passing resultText as $1 and cleanPath as $2 to sh -c
                 ["sh", "-c", "printf '%s' \"$1\" > \"$2\"", "sh", resultText, cleanPath],
                 (stdout, exitCode) => {
                     isSaving = false;
