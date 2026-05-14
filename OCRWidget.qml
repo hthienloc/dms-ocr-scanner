@@ -176,7 +176,7 @@ PluginComponent {
     horizontalBarPill: Component {
         Item {
             implicitWidth: horizontalRow.implicitWidth
-            implicitHeight: 24
+            implicitHeight: Theme.iconSize
             anchors.verticalCenter: parent.verticalCenter
 
             property bool draggingOver: false
