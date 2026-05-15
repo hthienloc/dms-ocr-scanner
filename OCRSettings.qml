@@ -4,6 +4,7 @@ import qs.Common
 import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
+import "./components"
 
 PluginSettings {
     id: root
@@ -55,187 +56,102 @@ PluginSettings {
         );
     }
 
-    StyledText {
-        width: parent.width
-        text: "OCR Engine Settings"
-        font.pixelSize: Theme.fontSizeLarge
-        font.weight: Font.Bold
-        color: Theme.primary
+    PluginHeader {
+        title: "OCR Engine Settings"
     }
 
-    StyledRect {
-        width: parent.width
-        height: settingsColumn.implicitHeight + (Theme.spacingM * 2)
-        radius: Theme.cornerRadius
-        color: Theme.surfaceContainer
+    SettingsCard {
+        SectionTitle { text: "Recognition Languages" }
 
-        Column {
-            id: settingsColumn
-            width: parent.width - (Theme.spacingM * 2)
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Theme.spacingM
+        Flow {
+            id: langFlow
+            width: parent.width
+            spacing: 6
 
-            StyledText {
-                text: "Select Recognition Languages"
-                font.pixelSize: Theme.fontSizeMedium
-                font.weight: Font.Medium
-                color: Theme.surfaceText
-            }
-
-            Flow {
-                id: langFlow
-                width: parent.width
-                spacing: 6
-
-                Repeater {
-                    model: root.availableLangs
-                    delegate: Rectangle {
-                        width: (langFlow.width - 12) / 3
-                        height: 40
-                        radius: Theme.cornerRadius
-                        color: root.selectedLangs.indexOf(modelData) >= 0 ? Theme.primary : Theme.surfaceContainerHigh                        
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 4
-                            DankIcon {
-                                name: root.selectedLangs.indexOf(modelData) >= 0 ? "check_circle" : "radio_button_unchecked"
-                                size: 14
-                                color: root.selectedLangs.indexOf(modelData) >= 0 ? Theme.onPrimary : Theme.surfaceVariantText
-                            }
-                            StyledText {
-                                text: modelData.toUpperCase()
-                                font.pixelSize: Theme.fontSizeSmall
-                                font.weight: root.selectedLangs.indexOf(modelData) >= 0 ? Font.Bold : Font.Normal
-                                color: root.selectedLangs.indexOf(modelData) >= 0 ? Theme.onPrimary : Theme.surfaceText
-                            }
+            Repeater {
+                model: root.availableLangs
+                delegate: Rectangle {
+                    width: (langFlow.width - 12) / 3
+                    height: 40
+                    radius: Theme.cornerRadius
+                    color: root.selectedLangs.indexOf(modelData) >= 0 ? Theme.primary : Theme.surfaceContainerHigh
+                    
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 4
+                        DankIcon {
+                            name: root.selectedLangs.indexOf(modelData) >= 0 ? "check_circle" : "radio_button_unchecked"
+                            size: 14
+                            color: root.selectedLangs.indexOf(modelData) >= 0 ? Theme.onPrimary : Theme.surfaceVariantText
                         }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.toggleLang(modelData)
+                        StyledText {
+                            text: modelData.toUpperCase()
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.weight: root.selectedLangs.indexOf(modelData) >= 0 ? Font.Bold : Font.Normal
+                            color: root.selectedLangs.indexOf(modelData) >= 0 ? Theme.onPrimary : Theme.surfaceText
                         }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleLang(modelData)
                     }
                 }
             }
+        }
 
-            StyledRect { width: parent.width; height: 1; color: Theme.outlineVariant }
+        StyledRect { width: parent.width; height: 1; color: Theme.outlineVariant }
 
-            Column {
-                width: parent.width
-                spacing: 4
-                ToggleSetting {
-                    settingKey: "autoCopy"
-                    label: "Auto-copy to Clipboard"
-                    defaultValue: true
-                }
-                ToggleSetting {
-                    settingKey: "keepResults"
-                    label: "Keep results when closed"
-                    defaultValue: true
-                }
-                ToggleSetting {
-                    settingKey: "showPopoutOnRightClick"
-                    label: "Show popout on right-click"
-                    defaultValue: true
-                }
-                ToggleSetting {
-                    settingKey: "showHints"
-                    label: "Show Hints"
-                    description: "Display helpful usage tips in the plugin popout."
-                    defaultValue: true
-                }
+        Column {
+            width: parent.width
+            spacing: 4
+            ToggleSetting {
+                settingKey: "autoCopy"
+                label: "Auto-copy to Clipboard"
+                defaultValue: true
+            }
+            ToggleSetting {
+                settingKey: "keepResults"
+                label: "Keep results when closed"
+                defaultValue: true
+            }
+            ToggleSetting {
+                settingKey: "showPopoutOnRightClick"
+                label: "Show popout on right-click"
+                defaultValue: true
+            }
+            ToggleSetting {
+                settingKey: "showHints"
+                label: "Show Hints"
+                description: "Display helpful usage tips in the plugin popout."
+                defaultValue: true
             }
         }
     }
 
-    StyledRect {
-        width: parent.width
-        height: installColumn.implicitHeight + Theme.spacingL * 2
-        radius: Theme.cornerRadius
-        color: Theme.surfaceContainer
+    SettingsCard {
+        SectionTitle { text: "Installation" }
+
+        InfoText {
+            text: "Install the required packages:"
+        }
 
         Column {
-            id: installColumn
-            anchors.fill: parent
-            anchors.margins: Theme.spacingL
-            spacing: Theme.spacingM
+            width: parent.width
+            spacing: Theme.spacingS
 
-            StyledText {
-                text: "Installation"
-                font.pixelSize: Theme.fontSizeMedium
-                font.weight: Font.Medium
-                color: Theme.surfaceText
-            }
+            Repeater {
+                model: [
+                    { cmd: "sudo dnf install tesseract tesseract-langpack-eng tesseract-langpack-vie wl-clipboard curl", label: "Fedora" },
+                    { cmd: "sudo pacman -S tesseract tesseract-data-eng tesseract-data-vie wl-clipboard curl", label: "Arch Linux" },
+                    { cmd: "sudo apt install tesseract tesseract-ocr-eng tesseract-ocr-vie wl-clipboard curl", label: "Debian/Ubuntu" },
+                    { cmd: "sudo zypper install tesseract tesseract-langpack-en tesseract-langpack-vi wl-clipboard curl", label: "openSUSE" }
+                ]
 
-            StyledText {
-                width: parent.width
-                text: "Install the required packages:"
-                font.pixelSize: Theme.fontSizeSmall
-                color: Theme.surfaceVariantText
-            }
-
-            Column {
-                width: parent.width
-                spacing: Theme.spacingS
-
-                Repeater {
-                    model: [
-                        { cmd: "sudo dnf install tesseract tesseract-langpack-eng tesseract-langpack-vie wl-clipboard curl", label: "Fedora" },
-                        { cmd: "sudo pacman -S tesseract tesseract-data-eng tesseract-data-vie wl-clipboard curl", label: "Arch Linux" },
-                        { cmd: "sudo apt install tesseract tesseract-ocr-eng tesseract-ocr-vie wl-clipboard curl", label: "Debian/Ubuntu" },
-                        { cmd: "sudo zypper install tesseract tesseract-langpack-en tesseract-langpack-vi wl-clipboard curl", label: "openSUSE" }
-                    ]
-
-                    delegate: Column {
-                        width: parent.width
-                        spacing: 4
-
-                        StyledText {
-                            text: modelData.label
-                            font.pixelSize: Theme.fontSizeSmall
-                            font.bold: true
-                            color: Theme.surfaceVariantText
-                        }
-
-                        Rectangle {
-                            width: parent.width
-                            height: Math.max(40, cmdRow.implicitHeight + 16)
-                            color: Theme.surfaceContainerHigh
-                            radius: 4
-
-                            Row {
-                                id: cmdRow
-                                width: parent.width - 16
-                                anchors.centerIn: parent
-                                spacing: 8
-
-                                StyledText {
-                                    width: parent.width - 32
-                                    text: modelData.cmd
-                                    font.family: "Monospace"
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    color: Theme.secondary
-                                    wrapMode: Text.Wrap
-                                }
-
-                                DankButton {
-                                    width: 24
-                                    height: 24
-                                    iconName: "content_copy"
-                                    backgroundColor: "transparent"
-                                    textColor: Theme.primary
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    onClicked: {
-                                        Proc.runCommand("copy-cmd", ["wl-copy", "--", modelData.cmd], function() {
-                                            ToastService.showInfo("Copied to clipboard");
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                    }
+                delegate: CopyBox {
+                    label: modelData.label
+                    text: modelData.cmd
                 }
             }
         }
