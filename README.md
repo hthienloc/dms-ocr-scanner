@@ -39,3 +39,5 @@ git clone https://github.com/hthienloc/dms-ocr-scanner ~/.config/DankMaterialShe
 ## License
 
 GPL-3.0
+## Dependencies
+- Requires [dms-common](https://github.com/hthienloc/dms-common) to be installed in the plugins directory.
