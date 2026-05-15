@@ -278,6 +278,21 @@ PluginComponent {
             showCloseButton: true
             focus: true
 
+            PluginShortcut {
+                id: shortcuts
+                onEnterPressed: {
+                    if (pluginRoot.resultText !== "" && !pluginRoot.isScanning) {
+                        pluginRoot.copyToClipboard(pluginRoot.resultText);
+                    }
+                }
+                onSpacePressed: {
+                    if (!pluginRoot.isScanning) {
+                        pluginRoot.scanFromClipboard();
+                    }
+                }
+                onEscapePressed: pluginRoot.closePopout()
+            }
+
             property var parentPopout: null
 
             Component.onDestruction: {
@@ -310,6 +325,14 @@ PluginComponent {
                         HintItem {
                             icon: "content_paste"
                             text: "Right-click the pill icon to scan directly from your clipboard"
+                        }
+                        HintItem {
+                            icon: "space_bar"
+                            text: "Space: Scan from clipboard"
+                        }
+                        HintItem {
+                            icon: "keyboard_return"
+                            text: "Enter: Copy result text"
                         }
                     }
 
