@@ -121,12 +121,6 @@ PluginSettings {
                 label: "Show popout on right-click"
                 defaultValue: true
             }
-            ToggleSetting {
-                settingKey: "showHints"
-                label: "Show Hints"
-                description: "Display helpful usage tips in the plugin popout."
-                defaultValue: true
-            }
         }
     }
 
@@ -154,6 +148,17 @@ PluginSettings {
                     text: modelData.cmd
                 }
             }
+        }
+    }
+
+    SettingsCard {
+        SectionTitle { text: "Behavior" }
+
+        ToggleSetting {
+            settingKey: "showHints"
+            label: "Show Hints"
+            description: "Display helpful usage tips in the plugin popout."
+            defaultValue: true
         }
     }
 }
