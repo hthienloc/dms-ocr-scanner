@@ -141,8 +141,9 @@ PluginSettings {
                     defaultValue: true
                 }
                 ToggleSetting {
-                    settingKey: "showTip"
-                    label: "Show drag-drop tip"
+                    settingKey: "showHints"
+                    label: "Show Hints"
+                    description: "Display helpful usage tips in the plugin popout."
                     defaultValue: true
                 }
             }

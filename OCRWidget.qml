@@ -6,6 +6,7 @@ import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
 import qs.Modals.FileBrowser
+import "./components"
 
 PluginComponent {
     id: pluginRoot
@@ -288,7 +289,7 @@ PluginComponent {
 
             DankFlickable {
                 width: parent.width
-                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM - ((pluginData.showTip ?? true) ? 40 : 0))
+                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM - ((pluginData.showHints ?? true) ? 40 : 0))
                 contentHeight: contentColumn.implicitHeight
                 contentWidth: width
                 clip: true
@@ -298,12 +299,18 @@ PluginComponent {
                     width: parent.width
                     spacing: Theme.spacingM
 
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: Theme.spacingXS
-                        visible: (pluginData.showTip ?? true)
-                        DankIcon { name: "lightbulb"; size: 14; color: Theme.surfaceVariantText }
-                        StyledText { text: "Tip: Drop image onto pill icon to scan quickly"; color: Theme.surfaceVariantText; font.pixelSize: Theme.fontSizeSmall }
+                    HintSection {
+                        showHints: (pluginData.showHints ?? true)
+                        width: parent.width
+
+                        HintItem {
+                            icon: "file_download"
+                            text: "Drop an image or URL onto the pill icon to scan it instantly"
+                        }
+                        HintItem {
+                            icon: "content_paste"
+                            text: "Right-click the pill icon to scan directly from your clipboard"
+                        }
                     }
 
                     Row {
