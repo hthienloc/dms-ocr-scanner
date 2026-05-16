@@ -14,7 +14,7 @@ Extract text from images using Tesseract OCR.
 git clone https://github.com/hthienloc/dms-common ~/.config/DankMaterialShell/plugins/dms-common
 
 # 2. Install this plugin
-dms://plugin/install/ocrScanner
+dms plugins install ocrScanner
 ```
 
 Or manually:
