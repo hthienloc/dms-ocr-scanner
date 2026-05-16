@@ -49,8 +49,8 @@ GPL-3.0
 
 ## Roadmap / TODO
 
-- [ ] **Region Capture**: Add a direct "Select Region" button to capture a portion of the screen and scan it instantly without using the clipboard manually.
-- [ ] **Integrated Translation**: Support automatic translation of extracted text into other languages using open APIs.
-- [ ] **Batch OCR**: Allow selecting multiple files at once and merging their extracted text into a single output.
-- [ ] **Scan History**: Implement a searchable history of previous scans, including the source image thumbnails and extracted text.
-- [ ] **Custom Tesseract Configs**: Allow users to provide custom command-line flags to Tesseract (e.g., `--psm` or `--oem` modes).
+- [ ] **Native Region Capture**: Add a "Screen Capture" mode using `grim`/`slurp` (Wayland) or `maim` (X11) to scan portions of the screen directly.
+- [ ] **On-device Translation**: Integrate a lightweight translation service (or API) to translate extracted text instantly.
+- [ ] **Persistent History**: Implement a local database to store previous scans, including timestamps and source image references.
+- [ ] **Batch Processing**: Support selecting multiple images for sequential OCR with a merged text output.
+- [ ] **Advanced Tesseract Options**: Expose Page Segmentation Method (PSM) and OCR Engine Mode (OEM) settings in the UI for specialized documents.
