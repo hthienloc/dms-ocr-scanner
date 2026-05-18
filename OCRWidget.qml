@@ -23,22 +23,41 @@ PluginComponent {
     property string resultText: ""
     property bool isScanning: false
     property bool isSaving: false
+    property bool isAutoScanning: false
     property string sourceImage: ""
     property int imageTrigger: 0
+    property int lastScanTime: 0
 
     function scanFromClipboard() {
-        if (isScanning) return;
+        if (isScanning || isAutoScanning) return;
+        
+        const now = Date.now();
+        if (now - lastScanTime < 2000) return;
+        lastScanTime = now;
 
         const tempImage = "/tmp/dms_ocr_input.png";
-        const getClipCmd = "wl-paste -t image/png > " + tempImage + " || xclip -selection clipboard -t image/png -o > " + tempImage;
+        const getClipCmd = "wl-paste -t image/png > " + tempImage + " 2>/dev/null";
 
         Proc.runCommand(
             "get-clipboard-image",
             ["sh", "-c", getClipCmd],
             (stdout, exitCode) => {
                 if (exitCode === 0) {
-                    isScanning = true;
-                    runTesseract(tempImage);
+                    const checkCmd = "file --mime-type -b " + tempImage + " | grep -q image && echo HAS_IMAGE";
+                    Proc.runCommand(
+                        "check-image-type",
+                        ["sh", "-c", checkCmd],
+                        (checkOut, checkCode) => {
+                            if (checkCode === 0 && checkOut.trim() === "HAS_IMAGE") {
+                                isScanning = true;
+                                isAutoScanning = true;
+                                runTesseract(tempImage, true);
+                            } else {
+                                ToastService.showError("No image found in clipboard!");
+                            }
+                        },
+                        0
+                    );
                 } else {
                     ToastService.showError("No image found in clipboard!");
                 }
@@ -119,7 +138,7 @@ PluginComponent {
         }
     }
 
-    function runTesseract(imagePath) {
+    function runTesseract(imagePath, skipAutoCopy) {
         if (imagePath.includes("/tmp/dms_ocr_input.png")) {
             sourceImage = imagePath;
             imageTrigger++;
@@ -133,6 +152,7 @@ PluginComponent {
             ["sh", "-c", tesseractCmd],
             (stdout, exitCode) => {
                 isScanning = false;
+                isAutoScanning = false;
                 if (exitCode === 0) {
                     const result = stdout.trim();
                     if (result === "") {
@@ -140,7 +160,7 @@ PluginComponent {
                     } else {
                         resultText = result;
                         ToastService.showInfo("Scan complete!");
-                        if (pluginData.autoCopy ?? true) {
+                        if (!skipAutoCopy && (pluginData.autoCopy ?? true)) {
                             copyToClipboard(result);
                         }
                     }
@@ -278,25 +298,10 @@ PluginComponent {
             showCloseButton: true
             focus: true
 
-            PluginShortcut {
-                id: shortcuts
-                onEnterPressed: {
-                    if (pluginRoot.resultText !== "" && !pluginRoot.isScanning) {
-                        pluginRoot.copyToClipboard(pluginRoot.resultText);
-                    }
-                }
-                onSpacePressed: {
-                    if (!pluginRoot.isScanning) {
-                        pluginRoot.scanFromClipboard();
-                    }
-                }
-                onEscapePressed: pluginRoot.closePopout()
-            }
-
             property var parentPopout: null
 
             Component.onDestruction: {
-                if (!pluginRoot.isSaving && !(pluginData.keepResults ?? true)) {
+                if (!pluginRoot.isSaving && pluginRoot.pluginData && !(pluginRoot.pluginData.keepResults ?? true)) {
                     resultText = "";
                     sourceImage = "";
                 }
