@@ -12,7 +12,7 @@ PluginComponent {
     id: pluginRoot
 
     popoutWidth: 800
-    popoutHeight: 600
+    popoutHeight: (pluginData.showHints ?? true) ? 660 : 600
 
     pillRightClickAction: () => {
         const showPopout = pluginData.showPopoutOnRightClick ?? true;
@@ -67,6 +67,7 @@ PluginComponent {
     }
 
     function selectFileAndScan() {
+        pluginRoot.closePopout();
         fileBrowserModal.open();
     }
 
@@ -250,6 +251,9 @@ PluginComponent {
             pluginRoot.runTesseract(path);
             close();
         }
+        onDialogClosed: {
+            pluginRoot.triggerPopout();
+        }
     }
 
     FileBrowserModal {
@@ -309,7 +313,7 @@ PluginComponent {
 
             DankFlickable {
                 width: parent.width
-                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM - ((pluginData.showHints ?? true) ? 40 : 0))
+                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM)
                 contentHeight: contentColumn.implicitHeight
                 contentWidth: width
                 clip: true
@@ -330,14 +334,6 @@ PluginComponent {
                         HintItem {
                             icon: "content_paste"
                             text: "Right-click the pill icon to scan directly from your clipboard"
-                        }
-                        HintItem {
-                            icon: "space_bar"
-                            text: "Space: Scan from clipboard"
-                        }
-                        HintItem {
-                            icon: "keyboard_return"
-                            text: "Enter: Copy result text"
                         }
                     }
 
