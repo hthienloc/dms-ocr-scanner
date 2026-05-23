@@ -451,19 +451,6 @@ PluginComponent {
                                         }
                                     }
                                 }
-
-                                DankButton {
-                                    anchors.top: parent.top
-                                    anchors.right: parent.right
-                                    anchors.margins: Theme.spacingS
-                                    width: 32
-                                    height: 32
-                                    iconName: "delete"
-                                    onClicked: pluginRoot.resultText = ""
-                                    enabled: pluginRoot.resultText !== "" && !pluginRoot.isScanning
-                                    backgroundColor: Theme.errorContainer
-                                    textColor: Theme.error
-                                }
                             }
 
                             Row {
