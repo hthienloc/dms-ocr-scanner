@@ -4,7 +4,7 @@ import qs.Common
 import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
-import "../dms-common"
+import "./dms-common"
 
 PluginSettings {
     id: root
@@ -56,12 +56,8 @@ PluginSettings {
         );
     }
 
-    PluginHeader {
-        title: "OCR Engine Settings"
-    }
-
     SettingsCard {
-        SectionTitle { text: "Recognition Languages" }
+        SectionTitle { text: I18n.tr("Recognition Languages"); icon: "language" }
 
         Flow {
             id: langFlow
@@ -108,27 +104,27 @@ PluginSettings {
             spacing: 4
             ToggleSetting {
                 settingKey: "autoCopy"
-                label: "Auto-copy to Clipboard"
+                label: I18n.tr("Auto-copy to Clipboard")
                 defaultValue: true
             }
             ToggleSetting {
                 settingKey: "keepResults"
-                label: "Keep results when closed"
+                label: I18n.tr("Keep results when closed")
                 defaultValue: true
             }
             ToggleSetting {
                 settingKey: "showPopoutOnRightClick"
-                label: "Show popout on right-click"
+                label: I18n.tr("Show popout on right-click")
                 defaultValue: true
             }
         }
     }
 
     SettingsCard {
-        SectionTitle { text: "Installation" }
+        SectionTitle { text: I18n.tr("Installation"); icon: "download" }
 
         InfoText {
-            text: "Install the required packages:"
+            text: I18n.tr("Install the required packages:")
         }
 
         Column {
@@ -152,13 +148,17 @@ PluginSettings {
     }
 
     SettingsCard {
-        SectionTitle { text: "Behavior" }
+        SectionTitle { text: I18n.tr("Behavior"); icon: "settings" }
 
         ToggleSetting {
             settingKey: "showHints"
-            label: "Show Hints"
-            description: "Display helpful usage tips in the plugin popout."
+            label: I18n.tr("Show Hints")
+            description: I18n.tr("Display helpful usage tips in the plugin popout.")
             defaultValue: true
         }
+    }
+
+    PluginAbout {
+        repoUrl: "https://github.com/hthienloc/dms-ocr-scanner"
     }
 }

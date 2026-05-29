@@ -6,7 +6,7 @@ import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
 import qs.Modals.FileBrowser
-import "../dms-common"
+import "./dms-common"
 
 PluginComponent {
     id: pluginRoot
@@ -329,11 +329,11 @@ PluginComponent {
 
                         HintItem {
                             icon: "file_download"
-                            text: "Drop an image or URL onto the pill icon to scan it instantly"
+                            text: I18n.tr("Drop an image or URL onto the pill icon to scan it instantly")
                         }
                         HintItem {
                             icon: "content_paste"
-                            text: "Right-click the pill icon to scan directly from your clipboard"
+                            text: I18n.tr("Right-click the pill icon to scan directly from your clipboard")
                         }
                     }
 
@@ -364,7 +364,7 @@ PluginComponent {
 
                                     StyledText {
                                         anchors.centerIn: parent
-                                        text: "No image scanned yet"
+                                        text: I18n.tr("No image scanned yet")
                                         color: Theme.outlineVariant
                                         visible: sourceImg.status !== Image.Ready && !pluginRoot.isScanning
                                         font.pixelSize: Theme.fontSizeMedium
@@ -393,7 +393,7 @@ PluginComponent {
                                 spacing: Theme.spacingS
 
                                 DankButton {
-                                    text: "Scan Clipboard"
+                                    text: I18n.tr("Scan Clipboard")
                                     width: (parent.width - Theme.spacingS) / 2
                                     iconName: "content_paste"
                                     onClicked: pluginRoot.scanFromClipboard()
@@ -403,7 +403,7 @@ PluginComponent {
                                 }
 
                                 DankButton {
-                                    text: "Select File"
+                                    text: I18n.tr("Select File")
                                     width: (parent.width - Theme.spacingS) / 2
                                     iconName: "image"
                                     onClicked: pluginRoot.selectFileAndScan()
@@ -444,7 +444,7 @@ PluginComponent {
                                         onTextChanged: pluginRoot.resultText = text
 
                                         Text {
-                                            text: "Text will appear here..."
+                                            text: I18n.tr("Text will appear here...")
                                             color: Theme.outlineVariant
                                             visible: resultArea.text === ""
                                             font: resultArea.font
@@ -458,7 +458,7 @@ PluginComponent {
                                 spacing: Theme.spacingS
 
                                 DankButton {
-                                    text: "Copy Text"
+                                    text: I18n.tr("Copy Text")
                                     width: (parent.width - Theme.spacingS) / 2
                                     iconName: "content_copy"
                                     onClicked: pluginRoot.copyToClipboard(pluginRoot.resultText)
@@ -468,7 +468,7 @@ PluginComponent {
                                 }
 
                                 DankButton {
-                                    text: "Save Text"
+                                    text: I18n.tr("Save Text")
                                     width: (parent.width - Theme.spacingS) / 2
                                     iconName: "save"
                                     onClicked: pluginRoot.saveResultToFile()
