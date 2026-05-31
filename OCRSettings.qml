@@ -68,7 +68,7 @@ PluginSettings {
                 model: root.availableLangs
                 delegate: Rectangle {
                     width: (langFlow.width - 12) / 3
-                    height: 40
+                    height: 36
                     radius: Theme.cornerRadius
                     color: root.selectedLangs.indexOf(modelData) >= 0 ? Theme.primary : Theme.surfaceContainerHigh
                     
@@ -97,22 +97,32 @@ PluginSettings {
             }
         }
 
-        StyledRect { width: parent.width; height: 1; color: Theme.outlineVariant }
+        Separator {}
 
         Column {
             width: parent.width
-            spacing: 4
-            ToggleSetting {
+            spacing: 0
+
+            ToggleSettingPlus {
+                id: autoCopy
                 settingKey: "autoCopy"
                 label: I18n.tr("Auto-copy to Clipboard")
                 defaultValue: true
             }
-            ToggleSetting {
+
+            Separator {}
+
+            ToggleSettingPlus {
+                id: keepResults
                 settingKey: "keepResults"
                 label: I18n.tr("Keep results when closed")
                 defaultValue: true
             }
-            ToggleSetting {
+
+            Separator {}
+
+            ToggleSettingPlus {
+                id: showPopoutOnRightClick
                 settingKey: "showPopoutOnRightClick"
                 label: I18n.tr("Show popout on right-click")
                 defaultValue: true
@@ -148,13 +158,39 @@ PluginSettings {
     }
 
     SettingsCard {
-        SectionTitle { text: I18n.tr("Behavior"); icon: "settings" }
+        id: behaviorSection
+        SectionTitle { 
+            text: I18n.tr("Behavior")
+            icon: "settings" 
+            showReset: showHints.isDirty
+            onResetClicked: showHints.resetToDefault()
+        }
 
-        ToggleSetting {
+        ToggleSettingPlus {
+            id: showHints
             settingKey: "showHints"
             label: I18n.tr("Show Hints")
-            description: I18n.tr("Display helpful usage tips in the plugin popout.")
             defaultValue: true
+        }
+    }
+
+    SettingsCard {
+        SectionTitle { 
+            id: usageTitle
+            text: I18n.tr("Usage Guide")
+            icon: "menu_book" 
+            collapsible: true
+            settingKey: "usageGuideExpanded"
+        }
+
+        UsageGuide {
+            expanded: usageTitle.isExpanded
+            items: [
+                I18n.tr("<b>Left-click</b> the pill to start a new screen scan."),
+                I18n.tr("<b>Right-click</b> the pill to perform a quick scan or open results."),
+                I18n.tr("Dropping an <b>image</b> onto the pill will scan it for text."),
+                I18n.tr("Scanned text is automatically copied to the <b>clipboard</b>.")
+            ]
         }
     }
 
