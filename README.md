@@ -28,6 +28,7 @@ git clone https://github.com/hthienloc/dms-ocr-scanner ~/.config/DankMaterialShe
 | Action | Result |
 |--------|--------|
 | Left click | Open scanner |
+| Middle click | Select image from file picker |
 | Right click | Scan from clipboard |
 
 ## Requirements

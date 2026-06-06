@@ -236,6 +236,17 @@ PluginComponent {
                     }
                 }
             }
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.MiddleButton
+                cursorShape: Qt.PointingHandCursor
+                onClicked: (mouse) => {
+                    if (mouse.button === Qt.MiddleButton) {
+                        pluginRoot.selectFileAndScan();
+                    }
+                }
+            }
         }
     }
 
