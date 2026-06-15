@@ -66,6 +66,28 @@ PluginComponent {
         );
     }
 
+    function scanFromScreenshot() {
+        isScanning = true;
+        const tempPath = "/tmp/dms_ocr_screenshot.png";
+
+        Proc.runCommand(
+            "screenshot-ocr",
+            ["dms", "screenshot", "region", "--no-confirm", "--no-notify", "--dir", "/tmp", "--filename", "dms_ocr_screenshot.png"],
+            (stdout, exitCode) => {
+                if (exitCode === 0) {
+                    sourceImage = tempPath;
+                    imageTrigger++;
+                    runTesseract(tempPath);
+                    pluginRoot.triggerPopout();
+                } else {
+                    isScanning = false;
+                    ToastService.showError("Failed to take screenshot or selection cancelled.");
+                }
+            },
+            0
+        );
+    }
+
     function selectFileAndScan() {
         pluginRoot.closePopout();
         fileBrowserModal.open();
@@ -243,7 +265,7 @@ PluginComponent {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: (mouse) => {
                     if (mouse.button === Qt.MiddleButton) {
-                        pluginRoot.selectFileAndScan();
+                        pluginRoot.scanFromScreenshot();
                     }
                 }
             }
@@ -343,8 +365,8 @@ PluginComponent {
                             text: I18n.tr("Drop an image or URL onto the pill icon to scan it instantly")
                         }
                         HintItem {
-                            icon: "content_paste"
-                            text: I18n.tr("Right-click the pill icon to scan directly from your clipboard")
+                            icon: "mouse"
+                            text: I18n.tr("Right-click to scan clipboard, Middle-click to scan screenshot")
                         }
                     }
 
