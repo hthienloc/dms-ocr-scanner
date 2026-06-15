@@ -19,6 +19,7 @@ git clone https://github.com/hthienloc/dms-ocr-scanner ~/.config/DankMaterialShe
 ## Features
 
 - **Screenshot OCR** - Middle-click the icon to capture a screen region and scan it instantly
+- **Persistent History** - Save and browse previous scans with images and text
 - **Clipboard scan** - One-click to extract text from a clipboard image (right-click)
 - **Multi-language** - English, Vietnamese, and 100+ other languages
 - **Auto-copy** - Extracted text automatically copied to clipboard
@@ -46,7 +47,8 @@ GPL-3.0
 ## Roadmap / TODO
 
 - [x] **Screenshot OCR**: Capture and scan portions of the screen directly using the DMS screenshot tool.
+- [x] **Persistent History**: Implement a local database to store previous scans, including timestamps and source image references.
 - [ ] **On-device Translation**: Integrate a lightweight translation service (or API) to translate extracted text instantly.
-- [ ] **Persistent History**: Implement a local database to store previous scans, including timestamps and source image references.
 - [ ] **Batch Processing**: Support selecting multiple images for sequential OCR with a merged text output.
 - [ ] **Advanced Tesseract Options**: Expose Page Segmentation Method (PSM) and OCR Engine Mode (OEM) settings in the UI for specialized documents.
+- [ ] **Image Preprocessing**: Improve recognition accuracy by using ImageMagick to upscale small text, normalize contrast, and reduce noise before scanning.
