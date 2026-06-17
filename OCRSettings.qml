@@ -136,6 +136,8 @@ PluginSettings {
             defaultValue: true
         }
 
+        Separator { leftMargin: Theme.spacingM; rightMargin: Theme.spacingM }
+
         ToggleSettingPlus {
             id: keepResults
             settingKey: "keepResults"
@@ -143,12 +145,16 @@ PluginSettings {
             defaultValue: true
         }
 
+        Separator { leftMargin: Theme.spacingM; rightMargin: Theme.spacingM }
+
         ToggleSettingPlus {
             id: showPopout
             settingKey: "showPopoutOnRightClick"
             label: I18n.tr("Show popout on right-click")
             defaultValue: true
         }
+
+        Separator { leftMargin: Theme.spacingM; rightMargin: Theme.spacingM }
 
         ToggleSettingPlus {
             id: showHints
