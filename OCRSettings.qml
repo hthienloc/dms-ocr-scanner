@@ -10,7 +10,7 @@ PluginSettings {
     id: root
     pluginId: "ocrScanner"
 
-    readonly property string defaultOcrLanguage: "eng+vie"
+    readonly property string defaultOcrLanguage: "eng"
     property var availableLangs: []
     property var selectedLangs: []
 
@@ -114,8 +114,20 @@ PluginSettings {
                 }
             }
         }
+    }
 
-        Separator { leftMargin: Theme.spacingM; rightMargin: Theme.spacingM }
+    SettingsCard {
+        SectionTitle { 
+            text: I18n.tr("Behavior")
+            icon: "settings" 
+            showReset: autoCopy.isDirty || keepResults.isDirty || showPopout.isDirty || showHints.isDirty
+            onResetClicked: {
+                autoCopy.resetToDefault();
+                keepResults.resetToDefault();
+                showPopout.resetToDefault();
+                showHints.resetToDefault();
+            }
+        }
 
         ToggleSettingPlus {
             id: autoCopy
@@ -132,9 +144,16 @@ PluginSettings {
         }
 
         ToggleSettingPlus {
-            id: showPopoutOnRightClick
+            id: showPopout
             settingKey: "showPopoutOnRightClick"
             label: I18n.tr("Show popout on right-click")
+            defaultValue: true
+        }
+
+        ToggleSettingPlus {
+            id: showHints
+            settingKey: "showHints"
+            label: I18n.tr("Show Hints")
             defaultValue: true
         }
     }
@@ -163,23 +182,6 @@ PluginSettings {
                     text: modelData.cmd
                 }
             }
-        }
-    }
-
-    SettingsCard {
-        id: behaviorSection
-        SectionTitle { 
-            text: I18n.tr("Behavior")
-            icon: "settings" 
-            showReset: showHints.isDirty
-            onResetClicked: showHints.resetToDefault()
-        }
-
-        ToggleSettingPlus {
-            id: showHints
-            settingKey: "showHints"
-            label: I18n.tr("Show Hints")
-            defaultValue: true
         }
     }
 
