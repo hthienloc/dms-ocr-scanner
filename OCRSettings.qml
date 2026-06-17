@@ -10,7 +10,7 @@ PluginSettings {
     id: root
     pluginId: "ocrScanner"
 
-    readonly property string defaultOcrLanguage: "eng+vie"
+    readonly property string defaultOcrLanguage: "eng"
     property var availableLangs: []
     property var selectedLangs: []
 
