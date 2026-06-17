@@ -10,13 +10,17 @@ PluginSettings {
     id: root
     pluginId: "ocrScanner"
 
+    readonly property string defaultOcrLanguage: "eng+vie"
     property var availableLangs: []
     property var selectedLangs: []
 
     function loadSettings() {
-        let val = root.loadValue("ocrLanguage", "eng+vie");
+        let val = root.defaultOcrLanguage;
+        if (root.pluginService) {
+            val = root.loadValue("ocrLanguage", root.defaultOcrLanguage);
+        }
         if (val === undefined || val === null) {
-            val = "eng+vie";
+            val = root.defaultOcrLanguage;
         }
         selectedLangs = String(val).split("+").filter(s => s !== "");
     }
