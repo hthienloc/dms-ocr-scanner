@@ -80,19 +80,19 @@ PluginSettings {
         Flow {
             id: langFlow
             width: parent.width
-            spacing: 6
+            spacing: Theme.spacingS
 
             Repeater {
                 model: root.availableLangs
                 delegate: Rectangle {
-                    width: (langFlow.width - 12) / 3
+                    width: (langFlow.width - (Theme.spacingS * 2)) / 3
                     height: 36
                     radius: Theme.cornerRadius
                     color: root.selectedLangs.indexOf(modelData) >= 0 ? Theme.primary : Theme.surfaceContainerHigh
                     
                     Row {
                         anchors.centerIn: parent
-                        spacing: 4
+                        spacing: Theme.spacingXS
                         DankIcon {
                             name: root.selectedLangs.indexOf(modelData) >= 0 ? "check_circle" : "radio_button_unchecked"
                             size: 14
@@ -114,37 +114,53 @@ PluginSettings {
                 }
             }
         }
+    }
 
-        Separator {}
-
-        Column {
-            width: parent.width
-            spacing: 0
-
-            ToggleSettingPlus {
-                id: autoCopy
-                settingKey: "autoCopy"
-                label: I18n.tr("Auto-copy to Clipboard")
-                defaultValue: true
+    SettingsCard {
+        SectionTitle { 
+            text: I18n.tr("Behavior")
+            icon: "settings" 
+            showReset: autoCopy.isDirty || keepResults.isDirty || showPopout.isDirty || showHints.isDirty
+            onResetClicked: {
+                autoCopy.resetToDefault();
+                keepResults.resetToDefault();
+                showPopout.resetToDefault();
+                showHints.resetToDefault();
             }
+        }
 
-            Separator {}
+        ToggleSettingPlus {
+            id: autoCopy
+            settingKey: "autoCopy"
+            label: I18n.tr("Auto-copy to Clipboard")
+            defaultValue: true
+        }
 
-            ToggleSettingPlus {
-                id: keepResults
-                settingKey: "keepResults"
-                label: I18n.tr("Keep results when closed")
-                defaultValue: true
-            }
+        Separator { leftMargin: Theme.spacingM; rightMargin: Theme.spacingM }
 
-            Separator {}
+        ToggleSettingPlus {
+            id: keepResults
+            settingKey: "keepResults"
+            label: I18n.tr("Keep results when closed")
+            defaultValue: true
+        }
 
-            ToggleSettingPlus {
-                id: showPopoutOnRightClick
-                settingKey: "showPopoutOnRightClick"
-                label: I18n.tr("Show popout on right-click")
-                defaultValue: true
-            }
+        Separator { leftMargin: Theme.spacingM; rightMargin: Theme.spacingM }
+
+        ToggleSettingPlus {
+            id: showPopout
+            settingKey: "showPopoutOnRightClick"
+            label: I18n.tr("Show popout on right-click")
+            defaultValue: true
+        }
+
+        Separator { leftMargin: Theme.spacingM; rightMargin: Theme.spacingM }
+
+        ToggleSettingPlus {
+            id: showHints
+            settingKey: "showHints"
+            label: I18n.tr("Show Hints")
+            defaultValue: true
         }
     }
 
@@ -172,23 +188,6 @@ PluginSettings {
                     text: modelData.cmd
                 }
             }
-        }
-    }
-
-    SettingsCard {
-        id: behaviorSection
-        SectionTitle { 
-            text: I18n.tr("Behavior")
-            icon: "settings" 
-            showReset: showHints.isDirty
-            onResetClicked: showHints.resetToDefault()
-        }
-
-        ToggleSettingPlus {
-            id: showHints
-            settingKey: "showHints"
-            label: I18n.tr("Show Hints")
-            defaultValue: true
         }
     }
 
