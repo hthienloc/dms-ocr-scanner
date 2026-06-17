@@ -80,19 +80,19 @@ PluginSettings {
         Flow {
             id: langFlow
             width: parent.width
-            spacing: 6
+            spacing: Theme.spacingS
 
             Repeater {
                 model: root.availableLangs
                 delegate: Rectangle {
-                    width: (langFlow.width - 12) / 3
+                    width: (langFlow.width - (Theme.spacingS * 2)) / 3
                     height: 36
                     radius: Theme.cornerRadius
                     color: root.selectedLangs.indexOf(modelData) >= 0 ? Theme.primary : Theme.surfaceContainerHigh
                     
                     Row {
                         anchors.centerIn: parent
-                        spacing: 4
+                        spacing: Theme.spacingXS
                         DankIcon {
                             name: root.selectedLangs.indexOf(modelData) >= 0 ? "check_circle" : "radio_button_unchecked"
                             size: 14
@@ -115,36 +115,27 @@ PluginSettings {
             }
         }
 
-        Separator {}
+        Separator { leftMargin: Theme.spacingM; rightMargin: Theme.spacingM }
 
-        Column {
-            width: parent.width
-            spacing: 0
+        ToggleSettingPlus {
+            id: autoCopy
+            settingKey: "autoCopy"
+            label: I18n.tr("Auto-copy to Clipboard")
+            defaultValue: true
+        }
 
-            ToggleSettingPlus {
-                id: autoCopy
-                settingKey: "autoCopy"
-                label: I18n.tr("Auto-copy to Clipboard")
-                defaultValue: true
-            }
+        ToggleSettingPlus {
+            id: keepResults
+            settingKey: "keepResults"
+            label: I18n.tr("Keep results when closed")
+            defaultValue: true
+        }
 
-            Separator {}
-
-            ToggleSettingPlus {
-                id: keepResults
-                settingKey: "keepResults"
-                label: I18n.tr("Keep results when closed")
-                defaultValue: true
-            }
-
-            Separator {}
-
-            ToggleSettingPlus {
-                id: showPopoutOnRightClick
-                settingKey: "showPopoutOnRightClick"
-                label: I18n.tr("Show popout on right-click")
-                defaultValue: true
-            }
+        ToggleSettingPlus {
+            id: showPopoutOnRightClick
+            settingKey: "showPopoutOnRightClick"
+            label: I18n.tr("Show popout on right-click")
+            defaultValue: true
         }
     }
 
