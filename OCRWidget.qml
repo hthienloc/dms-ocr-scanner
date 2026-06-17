@@ -12,7 +12,9 @@ PluginComponent {
     id: pluginRoot
 
     popoutWidth: 800
-    popoutHeight: (pluginData.showHints ?? true) ? 660 : 600
+    property int maxPopoutHeight: (pluginData.showHints ?? true) ? 660 : 600
+    property int currentContentHeight: 400
+    popoutHeight: Math.min(currentContentHeight, maxPopoutHeight)
 
     pillRightClickAction: () => {
         const showPopout = pluginData.showPopoutOnRightClick ?? true;
@@ -27,6 +29,125 @@ PluginComponent {
     property string sourceImage: ""
     property int imageTrigger: 0
     property int lastScanTime: 0
+
+    // History & Tabs
+    property string activeTab: "scanner" // "scanner" or "history"
+    property var history: []
+    readonly property string historyPath: Quickshell.env("HOME") + "/.config/DankMaterialShell/plugins/ocrScanner"
+    readonly property string historyFile: historyPath + "/history.json"
+
+    function loadHistory() {
+        Proc.runCommand(
+            "load-history",
+            ["python3", "-c", "import os, sys; f=sys.argv[1]; print(open(f).read() if os.path.exists(f) else '[]')", historyFile],
+            (stdout, exitCode) => {
+                try {
+                    const data = JSON.parse(stdout);
+                    history = Array.isArray(data) ? data : [];
+                    pluginRoot.history = history;
+                } catch (e) {
+                    history = [];
+                    pluginRoot.history = [];
+                }
+            },
+            0
+        );
+    }
+
+    function saveHistory() {
+        const data = JSON.stringify(history);
+        Proc.runCommand(
+            "save-history",
+            ["python3", "-c", "import os, sys; open(sys.argv[1], 'w').write(sys.argv[2])", historyFile, data],
+            (stdout, exitCode) => {
+                if (exitCode !== 0) {
+                    ToastService.showError("Failed to save history database. Code: " + exitCode);
+                }
+            },
+            0
+        );
+    }
+
+    function getRawPath(path) {
+        if (!path) return "";
+        let clean = path.toString();
+        // Strip query string (e.g. ?t=123)
+        const qIdx = clean.indexOf('?');
+        if (qIdx !== -1) clean = clean.substring(0, qIdx);
+        
+        if (clean.startsWith("file://")) return clean.substring(7);
+        if (clean.startsWith("file: ")) return clean.substring(6);
+        return clean;
+    }
+
+    function addToHistory() {
+        if (!resultText || !sourceImage) {
+            ToastService.showError("Nothing to save to history");
+            return;
+        }
+
+        const rawSource = getRawPath(sourceImage);
+        const timestamp = Date.now();
+        const ext = rawSource.split('.').pop() || "png";
+        const newImageName = "ocr_" + timestamp + "." + ext;
+        const newImagePath = historyPath + "/images/" + newImageName;
+        
+        Proc.runCommand(
+            "copy-history-image",
+            ["python3", "-c", "import os, shutil, sys; os.makedirs(os.path.dirname(sys.argv[2]), exist_ok=True); shutil.copy2(sys.argv[1], sys.argv[2])", rawSource, newImagePath],
+            (stdout, exitCode) => {
+                if (exitCode === 0) {
+                    const entry = {
+                        id: timestamp,
+                        timestamp: timestamp,
+                        text: resultText,
+                        image: newImagePath
+                    };
+                    const updatedHistory = [entry, ...history].slice(0, 50);
+                    history = updatedHistory;
+                    pluginRoot.history = updatedHistory;
+                    saveHistory();
+                    ToastService.showInfo("Saved to history");
+                } else {
+                    ToastService.showError("Failed to save image. Code: " + exitCode);
+                }
+            },
+            0
+        );
+    }
+
+    function deleteFromHistory(index) {
+        const item = history[index];
+        if (item && item.image) {
+            Proc.runCommand("delete-history-image", ["rm", "-f", item.image], null, 0);
+        }
+        const newHistory = [...history];
+        newHistory.splice(index, 1);
+        pluginRoot.history = newHistory;
+        saveHistory();
+    }
+
+    function clearHistory() {
+        Proc.runCommand("clear-history-images", ["sh", "-c", "rm -rf \"$1/images\" && mkdir -p \"$1/images\"", "sh", historyPath], (stdout, exitCode) => {
+            if (exitCode !== 0) {
+                ToastService.showError("Failed to clear history images");
+            }
+        }, 0);
+        pluginRoot.history = [];
+        saveHistory();
+    }
+
+    onPluginServiceChanged: {
+        if (pluginService) {
+            loadHistory();
+        }
+    }
+
+    Component.onCompleted: {
+        if (pluginService) {
+            loadHistory();
+        }
+    }
 
     function scanFromClipboard() {
         if (isScanning || isAutoScanning) return;
@@ -167,7 +288,7 @@ PluginComponent {
             imageTrigger++;
         }
 
-        const lang = pluginData.ocrLanguage || "eng+vie";
+        const lang = pluginService.loadPluginSetting(root.pluginId, "ocrLanguage", "eng");
         const tesseractCmd = "tesseract '" + imagePath + "' - -l " + lang;
 
         Proc.runCommand(
@@ -298,13 +419,7 @@ PluginComponent {
         fileExtensions: ["*.txt"]
         onFileSelected: filePath => {
             isSaving = true;
-            
-            let cleanPath = filePath;
-            if (cleanPath.startsWith("file://")) {
-                cleanPath = cleanPath.substring(7);
-            } else if (cleanPath.startsWith("file: ")) {
-                cleanPath = cleanPath.substring(6);
-            }
+            let cleanPath = pluginRoot.getRawPath(filePath);
             
             Proc.runCommand(
                 "write-file",
@@ -330,10 +445,12 @@ PluginComponent {
         PopoutComponent {
             id: popout
             width: parent ? parent.width : 0
-            headerText: "OCR Scanner"
-            detailsText: pluginRoot.isScanning ? "Processing..." : "Ready to scan"
+            headerText: pluginRoot.activeTab === "history" ? I18n.tr("OCR History") : I18n.tr("OCR Scanner")
+            detailsText: pluginRoot.activeTab === "history" ? (pluginRoot.history.length + " items") : (pluginRoot.isScanning ? I18n.tr("Processing...") : I18n.tr("Ready to scan"))
             showCloseButton: true
             focus: true
+
+            onImplicitHeightChanged: pluginRoot.currentContentHeight = implicitHeight
 
             property var parentPopout: null
 
@@ -342,14 +459,178 @@ PluginComponent {
                     resultText = "";
                     sourceImage = "";
                 }
+                pluginRoot.activeTab = "scanner";
             }
 
+            headerActions: Component {
+                Row {
+                    spacing: Theme.spacingS
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    // History Toggle Button
+                    Rectangle {
+                        width: 32
+                        height: 32
+                        radius: 16
+                        color: historyBtnArea.containsMouse ? Theme.surfaceContainerHigh : "transparent"
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        DankIcon {
+                            anchors.centerIn: parent
+                            name: pluginRoot.activeTab === "history" ? "arrow_back" : "history"
+                            size: Theme.iconSizeSmall
+                            color: Theme.surfaceText
+                        }
+
+                        MouseArea {
+                            id: historyBtnArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: pluginRoot.activeTab = (pluginRoot.activeTab === "history" ? "scanner" : "history")
+                        }
+                    }
+                }
+            }
+
+            readonly property int maxAllowedViewHeight: pluginRoot.maxPopoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM
+
+            // History View
             DankFlickable {
+                id: historyView
                 width: parent.width
-                height: Math.min(contentHeight, pluginRoot.popoutHeight - popout.headerHeight - popout.detailsHeight - Theme.spacingM)
+                visible: pluginRoot.activeTab === "history"
+                height: visible ? Math.min(historyCol.implicitHeight + Theme.spacingM, maxAllowedViewHeight) : 0
+                implicitHeight: height
+                contentHeight: historyCol.implicitHeight + Theme.spacingM
+                contentWidth: width
+                clip: true
+                interactive: visible
+
+                Column {
+                    id: historyCol
+                    width: parent.width
+                    spacing: Theme.spacingM
+
+                        DankButton {
+                            text: I18n.tr("Clear All History")
+                            width: parent.width
+                            backgroundColor: Theme.errorContainer
+                            textColor: Theme.error
+                            iconName: "delete_sweep"
+                            onClicked: pluginRoot.clearHistory()
+                            visible: pluginRoot.history.length > 0
+                        }
+
+                        StyledText {
+                            text: I18n.tr("No history items yet")
+                            color: Theme.outlineVariant
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            visible: pluginRoot.history.length === 0
+                            font.pixelSize: Theme.fontSizeMedium
+                        }
+
+                        Repeater {
+                            model: pluginRoot.history
+                            delegate: StyledRect {
+                                width: parent.width
+                                height: 120
+                                radius: Theme.cornerRadius
+                                color: Theme.surfaceContainer
+                                border.color: Theme.outlineVariant
+                                border.width: 1
+
+                                Row {
+                                    anchors.fill: parent
+                                    anchors.margins: Theme.spacingS
+                                    spacing: Theme.spacingM
+
+                                    // Image thumbnail
+                                    StyledRect {
+                                        width: 100
+                                        height: parent.height - (Theme.spacingS * 2)
+                                        radius: Theme.cornerRadiusSmall
+                                        color: Theme.surfaceContainerHigh
+                                        clip: true
+
+                                        Image {
+                                            anchors.fill: parent
+                                            source: "file://" + modelData.image
+                                            fillMode: Image.PreserveAspectCrop
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                pluginRoot.sourceImage = modelData.image;
+                                                pluginRoot.resultText = modelData.text;
+                                                pluginRoot.imageTrigger++;
+                                                pluginRoot.activeTab = "scanner";
+                                            }
+                                        }
+                                    }
+
+                                    // Text preview
+                                    Column {
+                                        width: parent.width - 160
+                                        height: parent.height - (Theme.spacingS * 2)
+                                        spacing: 4
+
+                                        StyledText {
+                                            text: new Date(modelData.timestamp).toLocaleString()
+                                            font.pixelSize: Theme.fontSizeSmall - 2
+                                            color: Theme.surfaceVariantText
+                                        }
+
+                                        StyledText {
+                                            text: modelData.text
+                                            width: parent.width
+                                            height: parent.height - 20
+                                            wrapMode: Text.Wrap
+                                            elide: Text.ElideRight
+                                            font.pixelSize: Theme.fontSizeSmall
+                                            color: Theme.surfaceText
+                                            maximumLineCount: 3
+                                        }
+                                    }
+
+                                    // Action buttons
+                                    Column {
+                                        width: 32
+                                        spacing: Theme.spacingS
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        DankActionButton {
+                                            iconName: "content_copy"
+                                            iconSize: 16
+                                            onClicked: pluginRoot.copyToClipboard(modelData.text)
+                                            tooltipText: I18n.tr("Copy Text")
+                                        }
+
+                                        DankActionButton {
+                                            iconName: "delete"
+                                            iconSize: 16
+                                            iconColor: Theme.error
+                                            onClicked: pluginRoot.deleteFromHistory(index)
+                                            tooltipText: I18n.tr("Delete Entry")
+                                        }
+                                    }
+                                }
+                            }
+                }
+            }
+
+            // Scanner View
+            DankFlickable {
+                id: scannerView
+                width: parent.width
+                visible: pluginRoot.activeTab === "scanner"
+                height: visible ? Math.min(contentColumn.implicitHeight, maxAllowedViewHeight) : 0
+                implicitHeight: height
                 contentHeight: contentColumn.implicitHeight
                 contentWidth: width
                 clip: true
+                interactive: visible
 
                 Column {
                     id: contentColumn
@@ -404,20 +685,34 @@ PluginComponent {
                                     }
                                 }
 
-                                DankButton {
+                                Row {
                                     anchors.top: parent.top
                                     anchors.right: parent.right
                                     anchors.margins: Theme.spacingS
-                                    width: 32
-                                    height: 32
-                                    iconName: "delete"
-                                    onClicked: {
-                                        pluginRoot.sourceImage = ""
-                                        pluginRoot.resultText = ""
+                                    spacing: Theme.spacingS
+
+                                    DankActionButton {
+                                        buttonSize: 32
+                                        iconName: "bookmark_add"
+                                        onClicked: pluginRoot.addToHistory()
+                                        enabled: pluginRoot.sourceImage !== "" && !pluginRoot.isScanning
+                                        backgroundColor: Theme.surfaceContainerHighest
+                                        iconColor: Theme.surfaceText
+                                        tooltipText: I18n.tr("Save to History")
                                     }
-                                    enabled: (pluginRoot.sourceImage !== "" || pluginRoot.resultText !== "") && !pluginRoot.isScanning
-                                    backgroundColor: Theme.errorContainer
-                                    textColor: Theme.error
+
+                                    DankActionButton {
+                                        buttonSize: 32
+                                        iconName: "delete"
+                                        onClicked: {
+                                            pluginRoot.sourceImage = ""
+                                            pluginRoot.resultText = ""
+                                        }
+                                        enabled: (pluginRoot.sourceImage !== "" || pluginRoot.resultText !== "") && !pluginRoot.isScanning
+                                        backgroundColor: Theme.errorContainer
+                                        iconColor: Theme.error
+                                        tooltipText: I18n.tr("Clear (No history)")
+                                    }
                                 }
                             }
 
@@ -516,5 +811,6 @@ PluginComponent {
             }
         }
     }
-
 }
+}
+
