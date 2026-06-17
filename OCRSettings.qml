@@ -10,13 +10,19 @@ PluginSettings {
     id: root
     pluginId: "ocrScanner"
 
+    readonly property string defaultOcrLanguage: "eng"
     property var availableLangs: []
     property var selectedLangs: []
 
-    // Sync with pluginData
     function loadSettings() {
-        let val = pluginData.ocrLanguage || "eng+vie";
-        selectedLangs = val.split("+").filter(s => s !== "");
+        let val = root.defaultOcrLanguage;
+        if (root.pluginService) {
+            val = root.loadValue("ocrLanguage", root.defaultOcrLanguage);
+        }
+        if (val === undefined || val === null) {
+            val = root.defaultOcrLanguage;
+        }
+        selectedLangs = String(val).split("+").filter(s => s !== "");
     }
 
     function toggleLang(lang) {
@@ -28,16 +34,26 @@ PluginSettings {
             list.push(lang);
         }
         
-        // Save to persistent storage
         let newVal = list.join("+");
-        pluginService.savePluginData(root.pluginId, "ocrLanguage", newVal);
+        root.saveValue("ocrLanguage", newVal);
         
         // Update local state to trigger UI
         selectedLangs = list;
     }
 
+    Connections {
+        target: root.pluginService
+        enabled: root.pluginService !== null
+
+        function onPluginDataChanged(changedPluginId) {
+            if (changedPluginId === root.pluginId) {
+                root.loadSettings();
+            }
+        }
+    }
+
     Component.onCompleted: {
-        loadSettings();
+        Qt.callLater(loadSettings);
         Proc.runCommand(
             "list-langs",
             ["tesseract", "--list-langs"],
@@ -55,6 +71,8 @@ PluginSettings {
             0
         );
     }
+
+    onPluginServiceChanged: loadSettings()
 
     SettingsCard {
         SectionTitle { text: I18n.tr("Recognition Languages"); icon: "language" }
