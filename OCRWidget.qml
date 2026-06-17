@@ -167,7 +167,7 @@ PluginComponent {
             imageTrigger++;
         }
 
-        let lang = pluginService.loadPluginSetting(pluginRoot.pluginId, "ocrLanguage", "eng");
+        let lang = pluginService.loadPluginData(pluginRoot.pluginId, "ocrLanguage", "eng");
         if (!lang || lang === "") lang = "eng";
         const tesseractCmd = "tesseract '" + imagePath + "' - -l " + lang;
 
